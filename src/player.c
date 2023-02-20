@@ -34,7 +34,7 @@ bool power_up_weapon(Player *this_player, uint port)
 	if (can_power_up)
 	{
 		++this_player->items.weapon[port].power;
-		shotMultiPos[port] = 0; // TODO: should be part of Player structure
+		this_player->shots_multi_pos[port] = 0;
 		
 		calc_purple_balls_needed(this_player);
 	}
@@ -52,4 +52,9 @@ void handle_got_purple_ball(Player *this_player)
 		--this_player->purple_balls_needed;
 	else
 		power_up_weapon(this_player, this_player->is_dragonwing ? REAR_WEAPON : FRONT_WEAPON);
+}
+
+bool is_dragonwing(Player* this_player)
+{
+	return this_player->is_dragonwing && this_player->items.ship == 1;
 }

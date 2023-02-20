@@ -180,10 +180,8 @@ JE_shortint difficultyLevel, oldDifficultyLevel,
             initialDifficulty;  // can only get highscore on initial episode
 
 /* Player Stuff */
-uint    power, lastPower, powerAdd;
 JE_byte shieldWait, shieldT;
 
-JE_byte          shotRepeat[11], shotMultiPos[11];
 JE_boolean       portConfigChange, portConfigDone;
 
 /* Level Data */
@@ -204,7 +202,7 @@ JE_boolean galagaMode;
 
 JE_boolean extraGame;
 
-JE_boolean twoPlayerMode, twoPlayerLinked, onePlayerAction, superTyrian;
+JE_boolean twoPlayerMode, twoPlayerFullMode, twoPlayerLinked, onePlayerAction, superTyrian;
 JE_boolean trentWin = false;
 JE_byte    superArcadeMode;
 
@@ -391,6 +389,8 @@ void JE_saveGame(JE_byte slot, const char *name)
 		player[0].items.super_arcade_mode = SA_SUPERTYRIAN;
 	else if (superArcadeMode == SA_NONE && onePlayerAction)
 		player[0].items.super_arcade_mode = SA_ARCADE;
+	else if (twoPlayerFullMode)
+		player[1].items.super_arcade_mode = SA_TWOPLAYERFULL;
 	else
 		player[0].items.super_arcade_mode = superArcadeMode;
 	
@@ -442,6 +442,7 @@ void JE_loadGame(JE_byte slot)
 	superTyrian = false;
 	onePlayerAction = false;
 	twoPlayerMode = false;
+	twoPlayerFullMode = false;
 	extraGame = false;
 	galagaMode = false;
 
@@ -466,6 +467,9 @@ void JE_loadGame(JE_byte slot)
 		onePlayerAction = false;
 		
 		pitems_to_playeritems(&player[1].items, saveFiles[slot-1].lastItems, NULL);
+		twoPlayerFullMode = player[1].items.super_arcade_mode == SA_TWOPLAYERFULL;
+		player[0].last_items = player[0].items;
+		player[1].last_items = player[1].items;
 	}
 	else
 	{
@@ -1015,7 +1019,7 @@ void JE_saveConfiguration(void)
 	
 	saveTemp[SIZEOF_SAVEGAMETEMP - 6] = editorLevel >> 8;
 	saveTemp[SIZEOF_SAVEGAMETEMP - 5] = editorLevel;
-	
+
 	JE_encryptSaveTemp();
 	
 #ifndef TARGET_WIN32

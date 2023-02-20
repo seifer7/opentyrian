@@ -25,11 +25,11 @@
 
 #include <stdio.h>
 
-#define MENU_MAX 14
+#define MENU_MAX 16
 
 #define DESTRUCT_MODES 5
 
-extern const JE_byte menuHelp[MENU_MAX][11];   /* [1..14, 1..11] */
+extern const JE_byte menuHelp[MENU_MAX][11];   /* [1..16, 1..11] */
 
 extern JE_byte verticalHeight;
 extern JE_byte helpBoxColor, helpBoxBrightness, helpBoxShadeType;

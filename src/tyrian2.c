@@ -800,7 +800,6 @@ start_level_first:
 	backPos = 0;
 	backPos2 = 0;
 	backPos3 = 0;
-	power = 0;
 	starfield_speed = 1;
 
 	/* Setup player ship graphics */
@@ -810,6 +809,8 @@ start_level_first:
 	{
 		player[i].x_velocity = 0;
 		player[i].y_velocity = 0;
+		player[i].power = 0;
+		player[i].power = 0;
 
 		player[i].invulnerable_ticks = 100;
 	}
@@ -873,7 +874,10 @@ start_level_first:
 	uint old_weapon_bar[2] = { 0, 0 };  // only redrawn when they change
 
 	/* Initially erase power bars */
-	lastPower = power / 10;
+	for (uint i = 0; i < COUNTOF(player); ++i)
+	{
+		player[i].power_last = player[i].power / 10;
+	}
 
 	/* Initial Text */
 	JE_drawTextWindow(miscText[20]);
@@ -1020,13 +1024,19 @@ start_level_first:
 
 	memset(enemyAvail,       1, sizeof(enemyAvail));
 	for (uint i = 0; i < COUNTOF(enemyShotAvail); i++)
+	{
 		enemyShotAvail[i] = 1;
+		player[i].option_attachment_move = 0;    /*Launch the Attachments!*/
+		player[i].option_attachment_linked = true;
+	}
 
 	/*Initialize Shots*/
 	memset(playerShotData,   0, sizeof(playerShotData));
 	memset(shotAvail,        0, sizeof(shotAvail));
-	memset(shotMultiPos,     0, sizeof(shotMultiPos));
-	memset(shotRepeat,       1, sizeof(shotRepeat));
+	memset(&player[0].shots_multi_pos, 1, sizeof(player[0].shots_multi_pos));
+	memset(&player[1].shots_multi_pos, 1, sizeof(player[1].shots_multi_pos));
+	memset(&player[0].shots_repeat, 1, sizeof(player[0].shots_repeat));
+	memset(&player[1].shots_repeat, 1, sizeof(player[1].shots_repeat));
 
 	memset(button,           0, sizeof(button));
 
@@ -1048,8 +1058,6 @@ start_level_first:
 	zinglonDuration = 0;
 	specialWait = 0;
 	nextSpecialWait = 0;
-	optionAttachmentMove  = 0;    /*Launch the Attachments!*/
-	optionAttachmentLinked = true;
 
 	editShip1 = false;
 	editShip2 = false;
@@ -1102,8 +1110,8 @@ level_loop:
 		mapY3Pos = BKwrap3to;
 
 	allPlayersGone = all_players_dead() &&
-	                 ((*player[0].lives == 1 && player[0].exploding_ticks == 0) || (!onePlayerAction && !twoPlayerMode)) &&
-	                 ((*player[1].lives == 1 && player[1].exploding_ticks == 0) || !twoPlayerMode);
+	                 ((*player[0].lives == 1 && player[0].exploding_ticks == 0) || (!onePlayerAction && !twoPlayerMode) || twoPlayerFullMode) &&
+	                 ((*player[1].lives == 1 && player[1].exploding_ticks == 0) || !twoPlayerMode || twoPlayerFullMode);
 
 	/*-----MUSIC FADE------*/
 	if (musicFade)
@@ -1165,7 +1173,7 @@ level_loop:
 		}
 		else // not galagaMode
 		{
-			if (twoPlayerMode)
+			if (twoPlayerMode && !twoPlayerFullMode)
 			{
 				if (--shieldWait == 0)
 				{
@@ -1180,13 +1188,30 @@ level_loop:
 					JE_drawShield();
 				}
 			}
-			else if (player[0].is_alive && player[0].shield < player[0].shield_max && power > shieldT)
+			else if (twoPlayerMode && twoPlayerFullMode)
 			{
 				if (--shieldWait == 0)
 				{
 					shieldWait = 15;
 
-					power -= shieldT;
+					for (uint i = 0; i < COUNTOF(player); ++i)
+					{
+						if (player[i].shield < player[i].shield_max && player[i].is_alive && player[i].power > shieldT) {
+							++player[i].shield;
+							player[i].power -= shieldT;
+						}
+					}
+
+					JE_drawShield();
+				}
+			}
+			else if (player[0].is_alive && player[0].shield < player[0].shield_max && player[0].power > shieldT)
+			{
+				if (--shieldWait == 0)
+				{
+					shieldWait = 15;
+
+					player[0].power -= shieldT;
 
 					++player[0].shield;
 					if (player[1].shield < player[0].shield_max)
@@ -1198,48 +1223,77 @@ level_loop:
 		}
 
 		/*---------------------Weapon Display-------------------------*/
-		for (uint i = 0; i < 2; ++i)
-		{
-			uint item_power = player[twoPlayerMode ? i : 0].items.weapon[i].power;
-
-			if (old_weapon_bar[i] != item_power)
+		if (!twoPlayerFullMode) {
+			for (uint i = 0; i < 2; ++i)
 			{
-				old_weapon_bar[i] = item_power;
+				uint item_power = player[twoPlayerMode ? i : 0].items.weapon[i].power;
 
-				int x = twoPlayerMode ? 286 : 289,
-				    y = (i == 0) ? (twoPlayerMode ? 6 : 17) : (twoPlayerMode ? 100 : 38);
-
-				fill_rectangle_xy(VGAScreenSeg, x, y, x + 1 + 10 * 2, y + 2, 0);
-
-				for (uint j = 1; j <= item_power; ++j)
+				if (old_weapon_bar[i] != item_power)
 				{
-					JE_rectangle(VGAScreen, x, y, x + 1, y + 2, 115 + j); /* SEGa000 */
-					x += 2;
+					old_weapon_bar[i] = item_power;
+
+					int x = twoPlayerMode ? 286 : 289,
+						y = (i == 0) ? (twoPlayerMode ? 6 : 17) : (twoPlayerMode ? 100 : 38);
+
+					fill_rectangle_xy(VGAScreenSeg, x, y, x + 1 + 10 * 2, y + 2, 0);
+
+					for (uint j = 1; j <= item_power; ++j)
+					{
+						JE_rectangle(VGAScreen, x, y, x + 1, y + 2, 115 + j); /* SEGa000 */
+						x += 2;
+					}
 				}
 			}
 		}
 
 		/*------------------------Power Bar-------------------------*/
-		if (twoPlayerMode || onePlayerAction)
+		if ((twoPlayerMode && !twoPlayerFullMode) || onePlayerAction)
 		{
-			power = 900;
+			for (uint p = 0; p < COUNTOF(player); p++) {
+				player[p].power = 900;
+			}
 		}
 		else
 		{
-			power += powerAdd;
-			if (power > 900)
-				power = 900;
+			if (twoPlayerFullMode) {
+				for (uint p = 0; p < COUNTOF(player); p++) {
+					player[p].power += player[p].power_add;
+					if (player[p].power > 900)
+						player[p].power = 900;
 
-			temp = power / 10;
+					temp = player[p].power / 10;
 
-			if (temp != lastPower)
-			{
-				if (temp > lastPower)
-					fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - temp, 276, 114 - 11 - lastPower, 113 + temp / 7);
-				else
-					fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - lastPower, 276, 114 - 11 - temp, 0);
-				
-				lastPower = temp;
+					if (temp != player[p].power_last)
+					{
+						int x = 286,
+							y = (p == 0 ? 6 : 100);
+						fill_rectangle_xy(VGAScreenSeg, x, y, x + 1 + 12 * 2, y + 2, 0);
+						for (uint j = 1; j <= (temp / 7); ++j)
+						{
+							JE_rectangle(VGAScreen, x, y, x + 1, y + 2, 115 + j); /* SEGa000 */
+							x += 2;
+						}
+
+						player[p].power_last = temp;
+					}
+				}
+			}
+			else {
+				player[0].power += player[0].power_add;
+				if (player[0].power > 900)
+					player[0].power = 900;
+
+				temp = player[0].power / 10;
+
+				if (temp != player[0].power_last)
+				{
+					if (temp > player[0].power_last)
+						fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - temp, 276, 114 - 11 - player[0].power_last, 113 + temp / 7);
+					else
+						fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - player[0].power_last, 276, 114 - 11 - temp, 0);
+
+					player[0].power_last = temp;
+				}
 			}
 		}
 
@@ -1482,7 +1536,7 @@ level_loop:
 					{
 						if (chain > 0)
 						{
-							shotMultiPos[SHOT_MISC] = 0;
+							player[playerNum-1].shots_multi_pos[SHOT_MISC] = 0;
 							b = player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, mouseX, mouseY, chain, playerNum);
 							shotAvail[z] = 0;
 							goto draw_player_shot_loop_end;
@@ -2635,10 +2689,17 @@ new_game:
 						ESCPressed = false;
 						temp = secretHint + (mt_rand() % 3) * 3;
 
-						if (twoPlayerMode)
+						if (twoPlayerMode && !twoPlayerFullMode)
 						{
 							for (uint i = 0; i < 2; ++i)
 								snprintf(levelWarningText[i], sizeof(*levelWarningText), "%s %lu", miscText[40 + i], player[i].cash);
+							strcpy(levelWarningText[2], "");
+							levelWarningLines = 3;
+						}
+						else if (twoPlayerMode && twoPlayerFullMode)
+						{
+							for (uint i = 0; i < 2; ++i)
+								snprintf(levelWarningText[i], sizeof(*levelWarningText), "%s %lu", miscText[40 + i], JE_totalScore(&player[i]));
 							strcpy(levelWarningText[2], "");
 							levelWarningLines = 3;
 						}
@@ -2674,7 +2735,7 @@ new_game:
 
 						JE_nextEpisode();
 
-						if (jumpBackToEpisode1 && !twoPlayerMode)
+						if (jumpBackToEpisode1 && (!twoPlayerMode || twoPlayerFullMode))
 						{
 							JE_loadPic(VGAScreen, 1, false); // huh?
 							JE_clr256(VGAScreen);
@@ -3615,9 +3676,10 @@ bool newGame(void)
 		else if (twoPlayerMode)
 		{
 			for (uint i = 0; i < COUNTOF(player); ++i)
-				player[i].cash = 0;
+				player[i].cash = (!richMode ? 0 : (!twoPlayerFullMode ? 0 : 1000000));
 
 			player[0].items.ship = 11;  // Silver Ship
+			if(twoPlayerFullMode) player[0].last_items = player[0].items;
 
 			difficultyLevel++;
 
@@ -3663,6 +3725,7 @@ bool newSuperArcadeGame(unsigned int i)
 		wait_input(true, true, true);
 
 		twoPlayerMode = false;
+		twoPlayerFullMode = false;
 		onePlayerAction = true;
 		superArcadeMode = i + 1;
 		gameLoaded = true;
@@ -4674,7 +4737,7 @@ void JE_eventSystem(void)
 		break;
 
 	case 33: /* Enemy From other Enemies */
-		if (!((eventRec[eventLoc-1].eventdat == 512 || eventRec[eventLoc-1].eventdat == 513) && (twoPlayerMode || onePlayerAction || superTyrian)))
+		if (!((eventRec[eventLoc-1].eventdat == 512 || eventRec[eventLoc-1].eventdat == 513) && ((twoPlayerMode && !twoPlayerFullMode) || onePlayerAction || superTyrian)))
 		{
 			if (superArcadeMode != SA_NONE)
 			{
@@ -4789,7 +4852,7 @@ void JE_eventSystem(void)
 			{
 				eventRec[eventLoc-1].eventdat = 829 + (mt_rand() % 6);
 			}
-			if (twoPlayerMode || onePlayerAction)
+			if ((twoPlayerMode && !twoPlayerFullMode) || onePlayerAction)
 			{
 				for (temp = 0; temp < 100; temp++)
 				{
@@ -4804,7 +4867,7 @@ void JE_eventSystem(void)
 		if (eventRec[eventLoc-1].eventdat3 != 0)
 			damageRate = eventRec[eventLoc-1].eventdat3;
 
-		if (eventRec[eventLoc-1].eventdat2 == 0 || twoPlayerMode || onePlayerAction)
+		if (eventRec[eventLoc-1].eventdat2 == 0 || (twoPlayerMode && !twoPlayerFullMode) || onePlayerAction)
 		{
 			difficultyLevel += eventRec[eventLoc-1].eventdat;
 			if (difficultyLevel < DIFFICULTY_EASY)
@@ -4915,12 +4978,12 @@ void JE_eventSystem(void)
 		break;
 
 	case 63:  // skip events if not in 2-player mode
-		if (!twoPlayerMode && !onePlayerAction)
+		if ((!twoPlayerMode && !onePlayerAction) || twoPlayerFullMode)
 			eventLoc += eventRec[eventLoc-1].eventdat;
 		break;
 
 	case 64:
-		if (!(eventRec[eventLoc-1].eventdat == 6 && twoPlayerMode && difficultyLevel > DIFFICULTY_NORMAL))
+		if (!(eventRec[eventLoc-1].eventdat == 6 && (twoPlayerMode && !twoPlayerFullMode) && difficultyLevel > DIFFICULTY_NORMAL))
 		{
 			smoothies[eventRec[eventLoc-1].eventdat-1] = eventRec[eventLoc-1].eventdat2;
 			temp = eventRec[eventLoc-1].eventdat;
@@ -5072,7 +5135,7 @@ void JE_eventSystem(void)
 		break;
 
 	case 80:  // skip events if in 2-player mode
-		if (twoPlayerMode)
+		if (twoPlayerMode && !twoPlayerFullMode)
 			eventLoc += eventRec[eventLoc-1].eventdat;
 		break;
 
@@ -5084,11 +5147,21 @@ void JE_eventSystem(void)
 		break;
 
 	case 82: /*Give SPECIAL WEAPON*/
-		player[0].items.special = eventRec[eventLoc-1].eventdat;
-		shotMultiPos[SHOT_SPECIAL] = 0;
-		shotRepeat[SHOT_SPECIAL] = 0;
-		shotMultiPos[SHOT_SPECIAL2] = 0;
-		shotRepeat[SHOT_SPECIAL2] = 0;
+		if (!twoPlayerMode || !twoPlayerFullMode) {
+			JE_byte p = mt_rand() % 1;
+			player[p].items.special = eventRec[eventLoc-1].eventdat;
+			player[p].shots_multi_pos[SHOT_SPECIAL] = 0;
+			player[p].shots_repeat[SHOT_SPECIAL] = 0;
+			player[p].shots_multi_pos[SHOT_SPECIAL2] = 0;
+			player[p].shots_repeat[SHOT_SPECIAL2] = 0;
+		}
+		else {
+			player[0].items.special = eventRec[eventLoc-1].eventdat;
+			player[0].shots_multi_pos[SHOT_SPECIAL] = 0;
+			player[0].shots_repeat[SHOT_SPECIAL] = 0;
+			player[0].shots_multi_pos[SHOT_SPECIAL2] = 0;
+			player[0].shots_repeat[SHOT_SPECIAL2] = 0;
+		}
 		break;
 
 	default:

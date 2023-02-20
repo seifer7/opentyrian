@@ -21,6 +21,7 @@
 
 #include "helptext.h"
 #include "opentyr.h"
+#include "player.h"
 
 typedef JE_byte JE_MenuChoiceType[MENU_MAX];
 

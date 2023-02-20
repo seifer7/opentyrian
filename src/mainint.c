@@ -590,7 +590,7 @@ long weapon_upgrade_cost(long base_cost, unsigned int power)
 	return base_cost * temp;
 }
 
-ulong JE_getCost(JE_byte itemType, JE_word itemNum)
+ulong JE_getCost(Player *this_player, JE_byte itemType, JE_word itemNum)
 {
 	long cost = 0;
 
@@ -604,7 +604,7 @@ ulong JE_getCost(JE_byte itemType, JE_word itemNum)
 		cost = weaponPort[itemNum].cost;
 
 		const uint port = itemType - 3,
-		           item_power = player[0].items.weapon[port].power - 1;
+		           item_power = this_player->items.weapon[port].power - 1;
 
 		downgradeCost = weapon_upgrade_cost(cost, item_power);
 		upgradeCost = weapon_upgrade_cost(cost, item_power + 1);
@@ -1058,12 +1058,14 @@ void JE_initPlayerData(void)
 	player[1].items.weapon[REAR_WEAPON].id = 15;  // Vulcan Cannon
 	player[1].items.sidekick_level = 101;         // 101, 102, 103
 	player[1].items.sidekick_series = 0;          // None
+	player[1].last_items = player[1].items;
 
 	gameHasRepeated = false;
 	onePlayerAction = false;
 	superArcadeMode = SA_NONE;
 	superTyrian = false;
 	twoPlayerMode = false;
+	twoPlayerFullMode = false;
 
 	secretHint = (mt_rand() % 3) + 1;
 
@@ -1992,13 +1994,20 @@ void JE_highScoreCheck(void)
 
 		int p = temp_p;
 
-		if (twoPlayerMode)
+		if (twoPlayerMode && !twoPlayerFullMode)
 		{
 			// ask for the highest scorer first
 			if (player[0].cash < player[1].cash)
 				p = (temp_p == 0) ? 1 : 0;
 
 			temp_score = (p == 0) ? player[0].cash : player[1].cash;
+		}
+		else if (twoPlayerMode && twoPlayerFullMode) {
+			// ask for the highest scorer first
+			if (JE_totalScore(&player[0]) < JE_totalScore(&player[1]))
+				p = (temp_p == 0) ? 1 : 0;
+
+			temp_score = JE_totalScore(&player[p]);
 		}
 		else
 		{
@@ -2230,7 +2239,9 @@ void adjust_difficulty(void)
 
 	assert(initialDifficulty > 0 && initialDifficulty < 10);
 
-	const ulong score = twoPlayerMode ? (player[0].cash + player[1].cash) : JE_totalScore(&player[0]),
+	const ulong score = twoPlayerMode && !twoPlayerFullMode ? (player[0].cash + player[1].cash) :
+				twoPlayerMode && twoPlayerFullMode ? (JE_totalScore(&player[0]) + JE_totalScore(&player[1])) :
+				JE_totalScore(&player[0]),
 	            adjusted_score = roundf(score * score_multiplier[initialDifficulty]);
 
 	uint new_difficulty = 0;
@@ -2694,6 +2705,7 @@ void JE_endLevelAni(void)
 	adjust_difficulty();
 
 	player[0].last_items = player[0].items;
+	if(twoPlayerFullMode) player[1].last_items = player[1].items;
 	strcpy(lastLevelName, levelName);
 
 	JE_wipeKey();
@@ -2744,7 +2756,7 @@ void JE_endLevelAni(void)
 	if (!constantPlay)
 		editorLevel += temp / 5;
 
-	if (!onePlayerAction && !twoPlayerMode)
+	if (!onePlayerAction && (!twoPlayerMode || twoPlayerFullMode))
 	{
 		JE_outTextGlow(VGAScreenSeg, 30, 120, miscText[4-1]);   /*Cubes*/
 
@@ -3012,15 +3024,17 @@ void JE_inGameDisplays(void)
 	/*Special Weapon?*/
 	if (player[0].items.special > 0)
 		blit_sprite2x2(VGAScreen, 25, 1, spriteSheet10, special[player[0].items.special].itemgraphic);
+	if (player[1].items.special > 0)
+		blit_sprite2x2(VGAScreen, 25 + 230, 1, spriteSheet10, special[player[1].items.special].itemgraphic);
 
 	/*Lives Left*/
 	if (onePlayerAction || twoPlayerMode)
 	{
 		for (int temp = 0; temp < (onePlayerAction ? 1 : 2); temp++)
 		{
-			const uint extra_lives = *player[temp].lives - 1;
+			const uint extra_lives = !twoPlayerFullMode ? *player[temp].lives - 1 : 0;
 
-			int y = (temp == 0 && player[0].items.special > 0) ? 35 : 15;
+			int y = player[temp].items.special > 0 ? 35 : 15;
 			tempW = (temp == 0) ? 30: 270;
 
 			if (extra_lives >= 5)
@@ -3095,7 +3109,7 @@ void JE_mainKeyboardInput(void)
 					player[0].items.generator = extraShips[z + 6];
 					/*Armor*/
 					player[0].items.shield = extraShips[z + 8];
-					memset(shotMultiPos, 0, sizeof(shotMultiPos));
+					memset(&player[0].shots_multi_pos, 0, sizeof(player[0].shots_multi_pos));
 
 					if (player[0].weapon_mode > JE_portConfigs())
 						player[0].weapon_mode = 1;
@@ -3138,7 +3152,7 @@ void JE_mainKeyboardInput(void)
 					player[1].items.generator = extraShips[z + 6];
 					/*Armor*/
 					player[1].items.shield = extraShips[z + 8];
-					memset(shotMultiPos, 0, sizeof(shotMultiPos));
+					memset(&player[1].shots_multi_pos, 0, sizeof(player[1].shots_multi_pos));
 
 					if (player[1].weapon_mode > JE_portConfigs())
 						player[1].weapon_mode = 1;
@@ -3490,14 +3504,14 @@ redo:
 		}
 		else
 		{
-			if (twoPlayerMode || onePlayerAction)  // if arcade mode
+			if ((twoPlayerMode && !twoPlayerFullMode) || onePlayerAction)  // if arcade mode
 			{
 				if (*this_player->lives > 1)  // respawn if any extra lives
 				{
 					--(*this_player->lives);
 
 					reallyEndLevel = false;
-					shotMultiPos[playerNum_-1] = 0;
+					player[playerNum_ - 1].shots_multi_pos[playerNum_-1] = 0; // Kane: What is this meant to do? Using playerNum as the weapon slot seems wrong
 					calc_purple_balls_needed(this_player);
 					twoPlayerLinked = false;
 					if (galagaMode)
@@ -3825,7 +3839,7 @@ redo:
 			/*Linking Routines*/
 
 			if (twoPlayerMode && !twoPlayerLinked && this_player->x == *mouseX_ && this_player->y == *mouseY_ &&
-			    abs(player[0].x - player[1].x) < 8 && abs(player[0].y - player[1].y) < 8 &&
+				player[1].items.ship == 1 && abs(player[0].x - player[1].x) < 8 && abs(player[0].y - player[1].y) < 8 &&
 			    player[0].is_alive && player[1].is_alive && !galagaMode)
 			{
 				twoPlayerLinked = true;
@@ -3936,21 +3950,6 @@ redo:
 	{
 		if (!twoPlayerLinked || playerNum_ < 2)
 		{
-			if (!twoPlayerMode || shipGr2 != 0)  // if not dragonwing
-			{
-				if (this_player->sidekick[LEFT_SIDEKICK].style == 0)
-				{
-					this_player->sidekick[LEFT_SIDEKICK].x = *mouseX_ - 14;
-					this_player->sidekick[LEFT_SIDEKICK].y = *mouseY_;
-				}
-
-				if (this_player->sidekick[RIGHT_SIDEKICK].style == 0)
-				{
-					this_player->sidekick[RIGHT_SIDEKICK].x = *mouseX_ + 16;
-					this_player->sidekick[RIGHT_SIDEKICK].y = *mouseY_;
-				}
-			}
-
 			if (this_player->x_friction_ticks > 0)
 			{
 				--this_player->x_friction_ticks;
@@ -4012,20 +4011,20 @@ redo:
 			this_player->y_velocity = 4;
 
 			// turret direction marker/shield
-			shotMultiPos[SHOT_MISC] = 0;
+			player[playerNum_-1].shots_multi_pos[SHOT_MISC] = 0;
 			b = player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec + 0.2f) * 26), this_player->y + roundf(cosf(linkGunDirec + 0.2f) * 26), *mouseX_, *mouseY_, 148, playerNum_);
-			shotMultiPos[SHOT_MISC] = 0;
+			player[playerNum_-1].shots_multi_pos[SHOT_MISC] = 0;
 			b = player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec - 0.2f) * 26), this_player->y + roundf(cosf(linkGunDirec - 0.2f) * 26), *mouseX_, *mouseY_, 148, playerNum_);
-			shotMultiPos[SHOT_MISC] = 0;
+			player[playerNum_-1].shots_multi_pos[SHOT_MISC] = 0;
 			b = player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec) * 26), this_player->y + roundf(cosf(linkGunDirec) * 26), *mouseX_, *mouseY_, 147, playerNum_);
 
-			if (shotRepeat[SHOT_REAR] > 0)
+			if (player[playerNum_-1].shots_repeat[SHOT_REAR] > 0)
 			{
-				--shotRepeat[SHOT_REAR];
+				--player[playerNum_-1].shots_repeat[SHOT_REAR];
 			}
 			else if (button[1-1])
 			{
-				shotMultiPos[SHOT_REAR] = 0;
+				player[playerNum_-1].shots_multi_pos[SHOT_REAR] = 0;
 				b = player_shot_create(0, SHOT_REAR, this_player->x + 1 + roundf(sinf(linkGunDirec) * 20), this_player->y + roundf(cosf(linkGunDirec) * 20), *mouseX_, *mouseY_, linkGunWeapons[this_player->items.weapon[REAR_WEAPON].id-1], playerNum_);
 				player_shot_set_direction(b, this_player->items.weapon[REAR_WEAPON].id, linkGunDirec);
 			}
@@ -4064,6 +4063,38 @@ redo:
 		ship_banking = MAX(-2, MIN(ship_banking, 2));
 
 		int ship_sprite = ship_banking * 2 + shipGr_;
+
+		if ((!this_player->is_dragonwing && !twoPlayerMode) ||
+			(this_player->is_dragonwing && twoPlayerMode) ||
+			twoPlayerFullMode) {
+
+			if (is_dragonwing(this_player)) {
+				if (this_player->sidekick[LEFT_SIDEKICK].style == 0)
+				{
+					this_player->sidekick[LEFT_SIDEKICK].x = this_player->x - 14 + ship_banking * 2;
+					this_player->sidekick[LEFT_SIDEKICK].y = this_player->y;
+				}
+
+				if (this_player->sidekick[RIGHT_SIDEKICK].style == 0)
+				{
+					this_player->sidekick[RIGHT_SIDEKICK].x = this_player->x + 17 + ship_banking * 2;
+					this_player->sidekick[RIGHT_SIDEKICK].y = this_player->y;
+				}
+			}
+			else {
+				if (this_player->sidekick[LEFT_SIDEKICK].style == 0)
+				{
+					this_player->sidekick[LEFT_SIDEKICK].x = *mouseX_ - 14;
+					this_player->sidekick[LEFT_SIDEKICK].y = *mouseY_;
+				}
+
+				if (this_player->sidekick[RIGHT_SIDEKICK].style == 0)
+				{
+					this_player->sidekick[RIGHT_SIDEKICK].x = *mouseX_ + 16;
+					this_player->sidekick[RIGHT_SIDEKICK].y = *mouseY_;
+				}
+			}
+		}
 
 		explosionFollowAmountX = this_player->x - this_player->last_x_explosion_follow;
 		explosionFollowAmountY = this_player->y - this_player->last_y_explosion_follow;
@@ -4165,14 +4196,14 @@ redo:
 				}
 				if (ship_banking != 0)  // NortSparks
 				{
-					if (shotRepeat[SHOT_NORTSPARKS] > 0)
+					if (player[playerNum_-1].shots_repeat[SHOT_NORTSPARKS] > 0)
 					{
-						--shotRepeat[SHOT_NORTSPARKS];
+						--player[playerNum_-1].shots_repeat[SHOT_NORTSPARKS];
 					}
 					else
 					{
 						b = player_shot_create(0, SHOT_NORTSPARKS, tempW + (mt_rand() % 8) - 4, this_player->y + (mt_rand() % 8) - 4, *mouseX_, *mouseY_, 671, 1);
-						shotRepeat[SHOT_NORTSPARKS] = abs(ship_banking) - 1;
+						player[playerNum_-1].shots_repeat[SHOT_NORTSPARKS] = abs(ship_banking) - 1;
 					}
 				}
 			}
@@ -4182,21 +4213,6 @@ redo:
 			}
 		}
 
-		/*Options Location*/
-		if (playerNum_ == 2 && shipGr_ == 0)  // if dragonwing
-		{
-			if (this_player->sidekick[LEFT_SIDEKICK].style == 0)
-			{
-				this_player->sidekick[LEFT_SIDEKICK].x = this_player->x - 14 + ship_banking * 2;
-				this_player->sidekick[LEFT_SIDEKICK].y = this_player->y;
-			}
-
-			if (this_player->sidekick[RIGHT_SIDEKICK].style == 0)
-			{
-				this_player->sidekick[RIGHT_SIDEKICK].x = this_player->x + 17 + ship_banking * 2;
-				this_player->sidekick[RIGHT_SIDEKICK].y = this_player->y;
-			}
-		}
 	}  // !endLevel
 
 	if (moveOk)
@@ -4214,12 +4230,12 @@ redo:
 					portConfigChange = true;
 					if (portConfigDone)
 					{
-						shotMultiPos[SHOT_REAR] = 0;
+						player[playerNum_-1].shots_multi_pos[SHOT_REAR] = 0;
 
 						if (superArcadeMode != SA_NONE && superArcadeMode <= SA_NORTSHIPZ)
 						{
-							shotMultiPos[SHOT_SPECIAL] = 0;
-							shotMultiPos[SHOT_SPECIAL2] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_SPECIAL] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_SPECIAL2] = 0;
 							if (player[0].items.special == SASpecialWeapon[superArcadeMode-1])
 							{
 								player[0].items.special = SASpecialWeaponB[superArcadeMode-1];
@@ -4250,7 +4266,7 @@ redo:
 				{
 					int min, max;
 
-					if (!twoPlayerMode)
+					if (!twoPlayerMode || twoPlayerFullMode)
 						min = 1, max = 2;
 					else
 						min = max = playerNum_;
@@ -4261,9 +4277,9 @@ redo:
 
 						if (item > 0)
 						{
-							if (shotRepeat[temp] > 0)
+							if (player[playerNum_-1].shots_repeat[temp] > 0)
 							{
-								--shotRepeat[temp];
+								--player[playerNum_-1].shots_repeat[temp];
 							}
 							else if (button[1-1])
 							{
@@ -4277,7 +4293,7 @@ redo:
 				}
 
 				/*Super Charge Weapons*/
-				if (playerNum_ == 2)
+				if (playerNum_ == 2 && is_dragonwing(&player[playerNum_-1]))
 				{
 
 					if (!twoPlayerLinked)
@@ -4317,13 +4333,13 @@ redo:
 					if (chargeLevel > 0)
 						fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275, 108 + (chargeLevel - 1) * 3, 204);
 
-					if (shotRepeat[SHOT_P2_CHARGE] > 0)
+					if (player[playerNum_-1].shots_repeat[SHOT_P2_CHARGE] > 0)
 					{
-						--shotRepeat[SHOT_P2_CHARGE];
+						--player[playerNum_-1].shots_repeat[SHOT_P2_CHARGE];
 					}
 					else if (button[1-1] && (!twoPlayerLinked || chargeLevel > 0))
 					{
-						shotMultiPos[SHOT_P2_CHARGE] = 0;
+						player[playerNum_-1].shots_multi_pos[SHOT_P2_CHARGE] = 0;
 						b = player_shot_create(16, SHOT_P2_CHARGE, this_player->x, this_player->y, *mouseX_, *mouseY_, chargeGunWeapons[player[1].items.weapon[REAR_WEAPON].id-1] + chargeLevel, playerNum_);
 
 						if (chargeLevel > 0)
@@ -4341,14 +4357,14 @@ redo:
 
 				if (player[temp-1].superbombs > 0)
 				{
-					if (shotRepeat[SHOT_P1_SUPERBOMB + temp-1] > 0)
+					if (player[playerNum_-1].shots_repeat[SHOT_P1_SUPERBOMB + temp-1] > 0)
 					{
-						--shotRepeat[SHOT_P1_SUPERBOMB + temp-1];
+						--player[playerNum_-1].shots_repeat[SHOT_P1_SUPERBOMB + temp-1];
 					}
 					else if (button[3-1] || button[2-1])
 					{
 						--player[temp-1].superbombs;
-						shotMultiPos[SHOT_P1_SUPERBOMB + temp-1] = 0;
+						player[playerNum_-1].shots_multi_pos[SHOT_P1_SUPERBOMB + temp-1] = 0;
 						b = player_shot_create(16, SHOT_P1_SUPERBOMB + temp-1, this_player->x, this_player->y, *mouseX_, *mouseY_, 535, playerNum_);
 					}
 				}
@@ -4389,12 +4405,12 @@ redo:
 					this_player->sidekick[RIGHT_SIDEKICK].y = this_player->old_y[0];
 					break;
 				case 2:  // front-mounted
-					if (!optionAttachmentLinked)
+					if (!this_player->option_attachment_linked)
 					{
-						this_player->sidekick[RIGHT_SIDEKICK].y += optionAttachmentMove / 2;
-						if (optionAttachmentMove >= -2)
+						this_player->sidekick[RIGHT_SIDEKICK].y += this_player->option_attachment_move / 2;
+						if (this_player->option_attachment_move >= -2)
 						{
-							if (optionAttachmentReturn)
+							if (this_player->option_attachment_return)
 								temp = 2;
 							else
 								temp = 0;
@@ -4402,27 +4418,27 @@ redo:
 							if (this_player->sidekick[RIGHT_SIDEKICK].y > (this_player->y - 20) + 5)
 							{
 								temp = 2;
-								optionAttachmentMove -= 1 + optionAttachmentReturn;
+								this_player->option_attachment_move -= 1 + this_player->option_attachment_return;
 							}
 							else if (this_player->sidekick[RIGHT_SIDEKICK].y > (this_player->y - 20) - 0)
 							{
 								temp = 3;
-								if (optionAttachmentMove > 0)
-									optionAttachmentMove--;
+								if (this_player->option_attachment_move > 0)
+									this_player->option_attachment_move--;
 								else
-									optionAttachmentMove++;
+									this_player->option_attachment_move++;
 							}
 							else if (this_player->sidekick[RIGHT_SIDEKICK].y > (this_player->y - 20) - 5)
 							{
 								temp = 2;
-								optionAttachmentMove++;
+								this_player->option_attachment_move++;
 							}
-							else if (optionAttachmentMove < 2 + optionAttachmentReturn * 4)
+							else if (this_player->option_attachment_move < 2 + this_player->option_attachment_return * 4)
 							{
-								optionAttachmentMove += 1 + optionAttachmentReturn;
+								this_player->option_attachment_move += 1 + this_player->option_attachment_return;
 							}
 
-							if (optionAttachmentReturn)
+							if (this_player->option_attachment_return)
 								temp = temp * 2;
 							if (abs(this_player->sidekick[RIGHT_SIDEKICK].x - this_player->x) < temp)
 								temp = 1;
@@ -4434,16 +4450,16 @@ redo:
 
 							if (abs(this_player->sidekick[RIGHT_SIDEKICK].y - (this_player->y - 20)) + abs(this_player->sidekick[RIGHT_SIDEKICK].x - this_player->x) < 8)
 							{
-								optionAttachmentLinked = true;
+								this_player->option_attachment_linked = true;
 								soundQueue[2] = S_CLINK;
 							}
 
 							if (button[3-1])
-								optionAttachmentReturn = true;
+								this_player->option_attachment_return = true;
 						}
 						else  // sidekick needs to catch up to player
 						{
-							optionAttachmentMove += 1 + optionAttachmentReturn;
+							this_player->option_attachment_move += 1 + this_player->option_attachment_return;
 							JE_setupExplosion(this_player->sidekick[RIGHT_SIDEKICK].x + 1, this_player->sidekick[RIGHT_SIDEKICK].y + 10, 0, 0, false, false);
 						}
 					}
@@ -4453,9 +4469,9 @@ redo:
 						this_player->sidekick[RIGHT_SIDEKICK].y = this_player->y - 20;
 						if (button[3-1])
 						{
-							optionAttachmentLinked = false;
-							optionAttachmentReturn = false;
-							optionAttachmentMove = -20;
+							this_player->option_attachment_linked = false;
+							this_player->option_attachment_return = false;
+							this_player->option_attachment_move = -20;
 							soundQueue[3] = S_WEAPON_26;
 						}
 					}
@@ -4465,7 +4481,7 @@ redo:
 					break;
 				}
 
-				if (playerNum_ == 2 || !twoPlayerMode)  // if player has sidekicks
+				if (playerNum_ == 2 || !twoPlayerMode || twoPlayerFullMode)  // if player has sidekicks
 				{
 					for (uint i = 0; i < COUNTOF(player->items.sidekick); ++i)
 					{
@@ -4476,9 +4492,9 @@ redo:
 						// fire/refill sidekick
 						if (this_option->wport > 0)
 						{
-							if (shotRepeat[shot_i] > 0)
+							if (player[playerNum_-1].shots_repeat[shot_i] > 0)
 							{
-								--shotRepeat[shot_i];
+								--player[playerNum_-1].shots_repeat[shot_i];
 							}
 							else
 							{
@@ -4498,7 +4514,7 @@ redo:
 											++this_player->sidekick[i].ammo;
 
 										// draw sidekick refill ammo gauge
-										const int y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
+										const int y = hud_sidekick_y[!this_player->is_dragonwing ? 0 : 1][i] + 13;
 										draw_segmented_gauge(VGAScreenSeg, 284, y, 112, 2, 2, MAX(1, ammo_max / 10), this_player->sidekick[i].ammo);
 									}
 
@@ -4509,14 +4525,14 @@ redo:
 										--this_player->sidekick[i].ammo;
 										if (this_player->sidekick[i].charge > 0)
 										{
-											shotMultiPos[shot_i] = 0;
+											player[playerNum_-1].shots_multi_pos[shot_i] = 0;
 											this_player->sidekick[i].charge = 0;
 										}
 										this_player->sidekick[i].charge_ticks = 20;
 										this_player->sidekick[i].animation_enabled = true;
 
 										// draw sidekick discharge ammo gauge
-										const int y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
+										const int y = hud_sidekick_y[!this_player->is_dragonwing ? 0 : 1][i] + 13;
 										fill_rectangle_xy(VGAScreenSeg, 284, y, 312, y + 2, 0);
 										draw_segmented_gauge(VGAScreenSeg, 284, y, 112, 2, 2, MAX(1, ammo_max / 10), this_player->sidekick[i].ammo);
 									}
@@ -4529,7 +4545,7 @@ redo:
 
 										if (this_player->sidekick[i].charge > 0)
 										{
-											shotMultiPos[shot_i] = 0;
+											player[playerNum_-1].shots_multi_pos[shot_i] = 0;
 											this_player->sidekick[i].charge = 0;
 										}
 										this_player->sidekick[i].charge_ticks = 20;
@@ -4545,7 +4561,7 @@ redo:
 	} // moveOK
 
 	// draw sidekicks
-	if ((playerNum_ == 2 || !twoPlayerMode) && !endLevel)
+	if ((playerNum_ == 2 || !twoPlayerMode || twoPlayerFullMode) && !endLevel)
 	{
 		for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i)
 		{
@@ -4690,8 +4706,8 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 					}
 					else if (superArcadeMode != SA_NONE && evalue > 30000)
 					{
-						shotMultiPos[SHOT_FRONT] = 0;
-						shotRepeat[SHOT_FRONT] = 10;
+						player[playerNum_-1].shots_multi_pos[SHOT_FRONT] = 0;
+						player[playerNum_-1].shots_repeat[SHOT_FRONT] = 10;
 
 						tempW = SAWeapon[superArcadeMode-1][evalue - 30000-1];
 
@@ -4718,10 +4734,10 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						{
 							this_player->cash += 250;
 							player[0].items.special = evalue - 32100;
-							shotMultiPos[SHOT_SPECIAL] = 0;
-							shotRepeat[SHOT_SPECIAL] = 10;
-							shotMultiPos[SHOT_SPECIAL2] = 0;
-							shotRepeat[SHOT_SPECIAL2] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_SPECIAL] = 0;
+							player[playerNum_-1].shots_repeat[SHOT_SPECIAL] = 10;
+							player[playerNum_-1].shots_multi_pos[SHOT_SPECIAL2] = 0;
+							player[playerNum_-1].shots_repeat[SHOT_SPECIAL2] = 0;
 
 							if (isNetworkGame)
 								sprintf(tempStr, "%s %s %s", JE_getName(1), miscTextB[4-1], special[evalue - 32100].name);
@@ -4760,8 +4776,8 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							for (uint i = 0; i < COUNTOF(player[1].items.sidekick); ++i)
 								player[1].items.sidekick[i] = optionSelect[player[1].items.sidekick_series][temp][i];
 
-							shotMultiPos[SHOT_LEFT_SIDEKICK] = 0;
-							shotMultiPos[SHOT_RIGHT_SIDEKICK] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_LEFT_SIDEKICK] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_RIGHT_SIDEKICK] = 0;
 							JE_drawOptions();
 							soundQueue[7] = S_POWERUP;
 						}
@@ -4773,8 +4789,8 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 
 							for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i)
 								player[0].items.sidekick[i] = evalue - 32000;
-							shotMultiPos[SHOT_LEFT_SIDEKICK] = 0;
-							shotMultiPos[SHOT_RIGHT_SIDEKICK] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_LEFT_SIDEKICK] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_RIGHT_SIDEKICK] = 0;
 
 							JE_drawOptions();
 							soundQueue[7] = S_POWERUP;
@@ -4793,7 +4809,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 								sprintf(tempStr, "%s %s", miscText[44-1], weaponPort[evalue - 31000].name);
 							JE_drawTextWindow(tempStr);
 							player[1].items.weapon[REAR_WEAPON].id = evalue - 31000;
-							shotMultiPos[SHOT_REAR] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_REAR] = 0;
 							enemyAvail[z] = 1;
 							soundQueue[7] = S_POWERUP;
 						}
@@ -4802,7 +4818,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							sprintf(tempStr, "%s %s", miscText[64-1], weaponPort[evalue - 31000].name);
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[REAR_WEAPON].id = evalue - 31000;
-							shotMultiPos[SHOT_REAR] = 0;
+							player[playerNum_-1].shots_multi_pos[SHOT_REAR] = 0;
 							enemyAvail[z] = 1;
 							soundQueue[7] = S_POWERUP;
 
@@ -4812,15 +4828,16 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 					}
 					else if (evalue > 30000)
 					{
-						if (playerNum_ == 1 && twoPlayerMode)
+						if (playerNum_ == 1 && twoPlayerMode || twoPlayerFullMode)
 						{
+
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(1), miscTextB[4-1], weaponPort[evalue - 30000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(playerNum_), miscTextB[4-1], weaponPort[evalue - 30000].name);
 							else
-								sprintf(tempStr, "%s %s", miscText[43-1], weaponPort[evalue - 30000].name);
+								sprintf(tempStr, "%s %s", miscText[42+(playerNum_-1)], weaponPort[evalue - 30000].name);
 							JE_drawTextWindow(tempStr);
-							player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
-							shotMultiPos[SHOT_FRONT] = 0;
+							player[playerNum_ - 1].items.weapon[FRONT_WEAPON].id = evalue - 30000;
+							player[playerNum_-1].shots_multi_pos[SHOT_FRONT] = 0;
 							enemyAvail[z] = 1;
 							soundQueue[7] = S_POWERUP;
 						}
@@ -4829,20 +4846,20 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							sprintf(tempStr, "%s %s", miscText[64-1], weaponPort[evalue - 30000].name);
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
-							shotMultiPos[SHOT_FRONT] = 0;
+							player[0].shots_multi_pos[SHOT_FRONT] = 0;
 							enemyAvail[z] = 1;
 							soundQueue[7] = S_POWERUP;
 						}
 
 						if (enemyAvail[z] == 1)
 						{
-							player[0].items.special = specialArcadeWeapon[evalue - 30000-1];
-							if (player[0].items.special > 0)
+							player[playerNum_ - 1].items.special = specialArcadeWeapon[evalue - 30000-1];
+							if (player[playerNum_ - 1].items.special > 0)
 							{
-								shotMultiPos[SHOT_SPECIAL] = 0;
-								shotRepeat[SHOT_SPECIAL] = 0;
-								shotMultiPos[SHOT_SPECIAL2] = 0;
-								shotRepeat[SHOT_SPECIAL2] = 0;
+								player[playerNum_-1].shots_multi_pos[SHOT_SPECIAL] = 0;
+								player[playerNum_-1].shots_repeat[SHOT_SPECIAL] = 0;
+								player[playerNum_-1].shots_multi_pos[SHOT_SPECIAL2] = 0;
+								player[playerNum_-1].shots_repeat[SHOT_SPECIAL2] = 0;
 							}
 							this_player->cash += 250;
 						}
@@ -4903,7 +4920,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							strcpy(tempStr, miscText[45-1]);
 						JE_drawTextWindow(tempStr);
 
-						power_up_weapon(&player[0], FRONT_WEAPON);
+						power_up_weapon((!twoPlayerFullMode ? &player[0] : this_player), FRONT_WEAPON);
 						soundQueue[7] = S_POWERUP;
 					}
 					else if (evalue == -2)  // got rear weapon powerup
@@ -4916,13 +4933,13 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							strcpy(tempStr, miscText[46-1]);
 						JE_drawTextWindow(tempStr);
 
-						power_up_weapon(twoPlayerMode ? &player[1] : &player[0], REAR_WEAPON);
+						power_up_weapon((!twoPlayerFullMode ? (twoPlayerMode ? &player[1] : &player[0]) : this_player), REAR_WEAPON);
 						soundQueue[7] = S_POWERUP;
 					}
 					else if (evalue == -3)
 					{
 						// picked up orbiting asteroid killer
-						shotMultiPos[SHOT_MISC] = 0;
+						player[playerNum_-1].shots_multi_pos[SHOT_MISC] = 0;
 						b = player_shot_create(0, SHOT_MISC, this_player->x, this_player->y, mouseX, mouseY, 104, playerNum_);
 						shotAvail[z] = 0;
 					}
@@ -4933,16 +4950,32 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 					}
 					else if (evalue == -5)
 					{
-						player[0].items.weapon[FRONT_WEAPON].id = 25;  // HOT DOG!
-						player[0].items.weapon[REAR_WEAPON].id = 26;
-						player[1].items.weapon[REAR_WEAPON].id = 26;
+						if (twoPlayerFullMode && !twoPlayerLinked) {
+							player[playerNum_ - 1].items.weapon[FRONT_WEAPON].id = 25;  // HOT DOG!
+							player[playerNum_ - 1].items.weapon[REAR_WEAPON].id = 26;
 
-						player[0].last_items = player[0].items;
+							player[playerNum_ - 1].last_items = player[playerNum_ - 1].items;
+						}
+						else if (twoPlayerFullMode) {
+							player[0].items.weapon[FRONT_WEAPON].id = 25;  // HOT DOG!
+							player[1].items.weapon[REAR_WEAPON].id = 26;
+
+							player[0].last_items = player[0].items;
+							player[1].last_items = player[1].items;
+						}
+						else {
+							player[0].items.weapon[FRONT_WEAPON].id = 25;  // HOT DOG!
+							player[0].items.weapon[REAR_WEAPON].id = 26;
+							player[1].items.weapon[REAR_WEAPON].id = 26;
+
+							player[0].last_items = player[0].items;
+						}
 
 						for (uint i = 0; i < COUNTOF(player); ++i)
 							player[i].weapon_mode = 1;
 
-						memset(shotMultiPos, 0, sizeof(shotMultiPos));
+						memset(&player[0].shots_multi_pos, 0, sizeof(player[0].shots_multi_pos));
+						memset(&player[1].shots_multi_pos, 0, sizeof(player[1].shots_multi_pos));
 					}
 					else if (twoPlayerLinked)
 					{

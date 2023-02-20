@@ -36,7 +36,7 @@
 
 char episode_name[6][31];
 char difficulty_name[7][21];
-char gameplay_name[5][26];
+char gameplay_name[6][26];
 
 bool gameplaySelect(void)
 {
@@ -45,6 +45,7 @@ bool gameplaySelect(void)
 		MENU_ITEM_1_PLAYER_FULL_GAME = 0,
 		MENU_ITEM_1_PLAYER_ARCADE,
 		MENU_ITEM_2_PLAYER_ARCADE,
+		MENU_ITEM_2_PLAYER_FULL_GAME,
 		MENU_ITEM_NETWORK,
 	};
 
@@ -212,13 +213,15 @@ bool gameplaySelect(void)
 			case MENU_ITEM_1_PLAYER_FULL_GAME:
 			case MENU_ITEM_1_PLAYER_ARCADE:
 			case MENU_ITEM_2_PLAYER_ARCADE:
+			case MENU_ITEM_2_PLAYER_FULL_GAME:
 			{
 				JE_playSampleNum(S_SELECT);
 
 				fade_black(10);
 
 				onePlayerAction = selectedIndex == MENU_ITEM_1_PLAYER_ARCADE;
-				twoPlayerMode = selectedIndex == MENU_ITEM_2_PLAYER_ARCADE;
+				twoPlayerMode = selectedIndex == MENU_ITEM_2_PLAYER_ARCADE || selectedIndex == MENU_ITEM_2_PLAYER_FULL_GAME;
+				twoPlayerFullMode = selectedIndex == MENU_ITEM_2_PLAYER_FULL_GAME;
 				return true;
 			}
 			case MENU_ITEM_NETWORK:

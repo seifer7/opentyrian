@@ -80,7 +80,12 @@ typedef struct
 	uint weapon_mode;
 	uint superbombs;
 	uint purple_balls_needed;
-	
+	JE_byte shots_repeat[11];
+	JE_byte shots_multi_pos[11];
+	uint power, power_last, power_add;
+	JE_integer option_attachment_move;
+	JE_boolean option_attachment_linked, option_attachment_return;
+
 	int x, y;
 	int old_x[20], old_y[20];
 	
@@ -129,5 +134,6 @@ static inline bool all_players_alive(void)
 void calc_purple_balls_needed(Player *);
 bool power_up_weapon(Player *, uint port);
 void handle_got_purple_ball(Player *);
+bool is_dragonwing(Player *);
 
 #endif // PLAYER_H

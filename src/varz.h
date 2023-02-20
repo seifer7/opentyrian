@@ -38,6 +38,7 @@ enum
 	SA_ENGAGE = 9,
 	
 	// only used in pItems[P_SUPERARCADE]
+	SA_TWOPLAYERFULL = 253,
 	SA_SUPERTYRIAN = 254,
 	SA_ARCADE = 255
 };
@@ -301,8 +302,6 @@ extern JE_boolean infiniteShot;
 extern JE_boolean allPlayersGone;
 extern const uint shadowYDist;
 extern JE_real optionSatelliteRotate;
-extern JE_integer optionAttachmentMove;
-extern JE_boolean optionAttachmentLinked, optionAttachmentReturn;
 extern JE_byte chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait;
 extern JE_word neat;
 extern rep_explosion_type rep_explosions[MAX_REPEATING_EXPLOSIONS];

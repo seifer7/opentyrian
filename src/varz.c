@@ -283,9 +283,6 @@ const uint shadowYDist = 10;
 
 JE_real optionSatelliteRotate;
 
-JE_integer optionAttachmentMove;
-JE_boolean optionAttachmentLinked, optionAttachmentReturn;
-
 JE_byte chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait;
 
 JE_word neat;
@@ -328,7 +325,9 @@ void JE_getShipInfo(void)
 	shipGrPtr = &spriteSheet9;
 	shipGr2ptr = &spriteSheet9;
 
-	powerAdd  = powerSys[player[0].items.generator].power;
+	for (uint p = 0; p < COUNTOF(player); p++) {
+		player[p].power_add = powerSys[player[p].items.generator].power;
+	}
 
 	extraShip = player[0].items.ship > 90;
 	if (extraShip)
@@ -349,6 +348,13 @@ void JE_getShipInfo(void)
 		JE_byte base2 = (player[1].items.ship - 91) * 15;
 		shipGr2 = JE_SGr(player[1].items.ship - 90, &shipGr2ptr);
 		player[1].armor = extraShips[base2 + 7]; /* bug? */
+	}
+	else if (twoPlayerFullMode) {
+		if (is_dragonwing(&player[1])) // USP Talon uses Dragonwing graphic for player 2
+			shipGr2 = 0;
+		else 
+			shipGr2 = ships[player[1].items.ship].shipgraphic;
+		player[1].armor = ships[player[1].items.ship].dmg;
 	}
 	else
 	{
@@ -392,33 +398,36 @@ void JE_drawOptions(void)
 	SDL_Surface *temp_surface = VGAScreen;
 	VGAScreen = VGAScreenSeg;
 
-	Player *this_player = &player[twoPlayerMode ? 1 : 0];
+	for (uint p = 0; p < COUNTOF(player); ++p) {
+		if ((!twoPlayerMode && p > 0) || (twoPlayerMode && !twoPlayerFullMode && p < 1)) continue;
+		Player *this_player = &player[p];
 
-	for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i)
-	{
-		JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
+		for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i)
+		{
+			JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
 
-		this_player->sidekick[i].ammo =
-		this_player->sidekick[i].ammo_max = this_option->ammo;
+			this_player->sidekick[i].ammo =
+				this_player->sidekick[i].ammo_max = this_option->ammo;
 
-		this_player->sidekick[i].ammo_refill_ticks =
-		this_player->sidekick[i].ammo_refill_ticks_max = (105 - this_player->sidekick[i].ammo) * 4;
+			this_player->sidekick[i].ammo_refill_ticks =
+				this_player->sidekick[i].ammo_refill_ticks_max = (105 - this_player->sidekick[i].ammo) * 4;
 
-		this_player->sidekick[i].style = this_option->tr;
+			this_player->sidekick[i].style = this_option->tr;
 
-		this_player->sidekick[i].animation_enabled = (this_option->option == 1);
-		this_player->sidekick[i].animation_frame = 0;
+			this_player->sidekick[i].animation_enabled = (this_option->option == 1);
+			this_player->sidekick[i].animation_frame = 0;
 
-		this_player->sidekick[i].charge = 0;
-		this_player->sidekick[i].charge_ticks = 20;
+			this_player->sidekick[i].charge = 0;
+			this_player->sidekick[i].charge_ticks = 20;
 
-		// draw initial sidekick HUD
-		const int y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i];
+			// draw initial sidekick HUD
+			const int y = hud_sidekick_y[p][i];
 
-		fill_rectangle_xy(VGAScreenSeg, 284, y, 284 + 28, y + 15, 0);
-		if (this_option->icongr > 0)
-			blit_sprite(VGAScreenSeg, 284, y, OPTION_SHAPES, this_option->icongr - 1);  // sidekick HUD icon
-		draw_segmented_gauge(VGAScreenSeg, 284, y + 13, 112, 2, 2, MAX(1, this_player->sidekick[i].ammo_max / 10), this_player->sidekick[i].ammo);
+			fill_rectangle_xy(VGAScreenSeg, 284, y, 284 + 28, y + 15, 0);
+			if (this_option->icongr > 0)
+				blit_sprite(VGAScreenSeg, 284, y, OPTION_SHAPES, this_option->icongr - 1);  // sidekick HUD icon
+			draw_segmented_gauge(VGAScreenSeg, 284, y + 13, 112, 2, 2, MAX(1, this_player->sidekick[i].ammo_max / 10), this_player->sidekick[i].ammo);
+		}
 	}
 
 	VGAScreen = temp_surface;
@@ -510,7 +519,7 @@ void JE_specialComplete(JE_byte playerNum, JE_byte specialType)
 			else
 				b = player_shot_create(0, SHOT_SPECIAL2, player[1].x, player[1].y, mouseX, mouseY, special[specialType].wpn, playerNum);
 
-			shotRepeat[SHOT_SPECIAL] = shotRepeat[SHOT_SPECIAL2];
+			player[playerNum-1].shots_repeat[SHOT_SPECIAL] = player[playerNum-1].shots_repeat[SHOT_SPECIAL2];
 			break;
 		/*Repulsor*/
 		case 2:
@@ -533,7 +542,7 @@ void JE_specialComplete(JE_byte playerNum, JE_byte specialType)
 		/*Zinglon Blast*/
 		case 3:
 			zinglonDuration = 50;
-			shotRepeat[SHOT_SPECIAL] = 100;
+			player[playerNum-1].shots_repeat[SHOT_SPECIAL] = 100;
 			soundQueue[7] = S_SOUL_OF_ZINGLON;
 			break;
 		/*Attractor*/
@@ -587,7 +596,7 @@ void JE_specialComplete(JE_byte playerNum, JE_byte specialType)
 					specialWeaponFreq = 3;
 					flareDuration = 50 + 10 * player[0].items.weapon[FRONT_WEAPON].power;
 					zinglonDuration = 50;
-					shotRepeat[SHOT_SPECIAL] = 100;
+					player[playerNum-1].shots_repeat[SHOT_SPECIAL] = 100;
 					soundQueue[7] = S_SOUL_OF_ZINGLON;
 					break;
 				case 8:
@@ -628,7 +637,7 @@ void JE_specialComplete(JE_byte playerNum, JE_byte specialType)
 
 			if (superArcadeMode > 0 && superArcadeMode <= SA)
 			{
-				shotRepeat[SHOT_SPECIAL] = 250;
+				player[playerNum-1].shots_repeat[SHOT_SPECIAL] = 250;
 				b = player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, mouseX, mouseY, 707, 1);
 				player[0].invulnerable_ticks = 100;
 			}
@@ -650,12 +659,12 @@ void JE_specialComplete(JE_byte playerNum, JE_byte specialType)
 			if (player[0].items.sidekick[LEFT_SIDEKICK] == special[specialType].wpn)
 			{
 				player[0].items.sidekick[RIGHT_SIDEKICK] = special[specialType].wpn;
-				shotMultiPos[RIGHT_SIDEKICK] = 0;
+				player[0].shots_multi_pos[RIGHT_SIDEKICK] = 0;
 			}
 			else
 			{
 				player[0].items.sidekick[LEFT_SIDEKICK] = special[specialType].wpn;
-				shotMultiPos[LEFT_SIDEKICK] = 0;
+				player[0].shots_multi_pos[LEFT_SIDEKICK] = 0;
 			}
 
 			JE_drawOptions();
@@ -668,7 +677,7 @@ void JE_specialComplete(JE_byte playerNum, JE_byte specialType)
 
 			soundQueue[4] = S_POWERUP;
 
-			shotMultiPos[RIGHT_SIDEKICK] = 0;
+			player[0].shots_multi_pos[RIGHT_SIDEKICK] = 0;
 			break;
 	}
 }
@@ -677,22 +686,30 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 {
 	if (player[0].items.special > 0)
 	{
-		if (shotRepeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2)
+		if (player[playerNum-1].shots_repeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2)
 			blit_sprite2(VGAScreen, 47, 4, spriteSheet9, 94);
 		else
 			blit_sprite2(VGAScreen, 47, 4, spriteSheet9, 93);
 	}
 
-	if (shotRepeat[SHOT_SPECIAL] > 0)
+	if (player[1].items.special > 0)
 	{
-		--shotRepeat[SHOT_SPECIAL];
+		if (player[playerNum-1].shots_repeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2)
+			blit_sprite2(VGAScreen, 47 + 230, 4, spriteSheet9, 94);
+		else
+			blit_sprite2(VGAScreen, 47 + 230, 4, spriteSheet9, 93);
+	}
+
+	if (player[playerNum-1].shots_repeat[SHOT_SPECIAL] > 0)
+	{
+		--player[playerNum-1].shots_repeat[SHOT_SPECIAL];
 	}
 	if (specialWait > 0)
 	{
 		specialWait--;
 	}
 	temp = SFExecuted[playerNum-1];
-	if (temp > 0 && shotRepeat[SHOT_SPECIAL] == 0 && flareDuration == 0)
+	if (temp > 0 && player[playerNum-1].shots_repeat[SHOT_SPECIAL] == 0 && flareDuration == 0)
 	{
 		temp2 = special[temp].pwr;
 
@@ -729,8 +746,8 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 			}
 		}
 
-		shotMultiPos[SHOT_SPECIAL] = 0;
-		shotMultiPos[SHOT_SPECIAL2] = 0;
+		player[playerNum-1].shots_multi_pos[SHOT_SPECIAL] = 0;
+		player[playerNum-1].shots_multi_pos[SHOT_SPECIAL2] = 0;
 
 		if (can_afford)
 			JE_specialComplete(playerNum, temp);
@@ -744,7 +761,7 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 		VGAScreen = game_screen; /* side-effect of game_screen */
 	}
 
-	if (playerNum == 1 && player[0].items.special > 0)
+	if (player[playerNum - 1].items.special > 0)
 	{  /*Main Begin*/
 
 		if (superArcadeMode > 0 && (button[2-1] || button[3-1]))
@@ -755,10 +772,10 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 		{
 			fireButtonHeld = false;
 		}
-		else if (shotRepeat[SHOT_SPECIAL] == 0 && !fireButtonHeld && !(flareDuration > 0) && specialWait == 0)
+		else if (player[playerNum-1].shots_repeat[SHOT_SPECIAL] == 0 && !fireButtonHeld && !(flareDuration > 0) && specialWait == 0)
 		{
 			fireButtonHeld = true;
-			JE_specialComplete(playerNum, player[0].items.special);
+			JE_specialComplete(playerNum, player[playerNum - 1].items.special);
 		}
 
 	}  /*Main End*/
@@ -810,9 +827,9 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 
 			if (linkToPlayer)
 			{
-				if (shotRepeat[SHOT_SPECIAL] == 0)
+				if (player[playerNum-1].shots_repeat[SHOT_SPECIAL] == 0)
 				{
-					b = player_shot_create(0, SHOT_SPECIAL, player[0].x, player[0].y, mouseX, mouseY, specialWeaponWpn, playerNum);
+					b = player_shot_create(0, SHOT_SPECIAL, player[playerNum - 1].x, player[playerNum - 1].y, mouseX, mouseY, specialWeaponWpn, playerNum);
 				}
 			}
 			else
@@ -840,7 +857,7 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 	else if (flareStart)
 	{
 		flareStart = false;
-		shotRepeat[SHOT_SPECIAL] = linkToPlayer ? 15 : 200;
+		player[playerNum-1].shots_repeat[SHOT_SPECIAL] = linkToPlayer ? 15 : 200;
 		flareDuration = 0;
 		if (levelFilter == specialWeaponFilter)
 		{
@@ -854,8 +871,8 @@ void JE_doSpecialShot(JE_byte playerNum, uint *armor, uint *shield)
 	{
 		temp = 25 - abs(zinglonDuration - 25);
 
-		JE_barBright(VGAScreen, player[0].x + 7 - temp,     0, player[0].x + 7 + temp,     184);
-		JE_barBright(VGAScreen, player[0].x + 7 - temp - 2, 0, player[0].x + 7 + temp + 2, 184);
+		JE_barBright(VGAScreen, player[playerNum - 1].x + 7 - temp,     0, player[playerNum - 1].x + 7 + temp,     184);
+		JE_barBright(VGAScreen, player[playerNum - 1].x + 7 - temp - 2, 0, player[playerNum - 1].x + 7 + temp + 2, 184);
 
 		zinglonDuration--;
 		if (zinglonDuration % 5 == 0)
@@ -1101,8 +1118,14 @@ void JE_drawShield(void)
 {
 	if (twoPlayerMode && !galagaMode)
 	{
-		for (uint i = 0; i < COUNTOF(player); ++i)
+		for (uint i = 0; i < COUNTOF(player); ++i) {
 			JE_dBar3(VGAScreen, 270, 60 + 134 * i, roundf(player[i].shield * 0.8f), 144);
+			if (player[i].shield != player[i].shield_max)
+			{
+				const uint y = 59 + 134 * i - roundf(player[i].shield_max * 2 * 0.8f);
+				JE_rectangle(VGAScreen, 270, y, 278, y, 68); /* <MXD> SEGa000 */
+			}
+		}
 	}
 	else
 	{

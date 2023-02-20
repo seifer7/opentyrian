@@ -116,7 +116,6 @@ extern JE_word lastCubeMax, cubeMax;
 extern JE_word cubeList[4];
 extern JE_boolean gameHasRepeated;
 extern JE_shortint difficultyLevel, oldDifficultyLevel, initialDifficulty;
-extern uint power, lastPower, powerAdd;
 extern JE_byte shieldWait, shieldT;
 
 enum
@@ -134,7 +133,6 @@ enum
 	SHOT_SPECIAL2
 };
 
-extern JE_byte shotRepeat[11], shotMultiPos[11];
 extern JE_boolean portConfigChange, portConfigDone;
 extern char lastLevelName[11], levelName[11];
 extern JE_byte mainLevel, nextLevel, saveLevel;
@@ -145,7 +143,7 @@ extern JE_boolean filtrationAvail, filterActive, filterFade, filterFadeStart;
 extern JE_boolean gameJustLoaded;
 extern JE_boolean galagaMode;
 extern JE_boolean extraGame;
-extern JE_boolean twoPlayerMode, twoPlayerLinked, onePlayerAction, superTyrian, trentWin;
+extern JE_boolean twoPlayerMode, twoPlayerFullMode, twoPlayerLinked, onePlayerAction, superTyrian, trentWin;
 extern JE_byte superArcadeMode;
 extern JE_byte superArcadePowerUp;
 extern JE_real linkGunDirec;

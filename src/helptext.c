@@ -33,18 +33,20 @@ const JE_byte menuHelp[MENU_MAX][11] = /* [1..maxmenu, 1..11] */
 {
 	{  1, 34,  2,  3,  4,  5,                  0, 0, 0, 0, 0 },
 	{  6,  7,  8,  9, 10, 11, 11, 12,                0, 0, 0 },
-	{ 13, 14, 15, 15, 16, 17, 12,                 0, 0, 0, 0 },
+	{ 13, 14, 15, 15, 16, 17, 17, 12,                 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{  4, 30, 30,  3,  5,                   0, 0, 0, 0, 0, 0 },
+	{  4, 3,  5,                      0, 0, 0, 0, 0, 0, 0, 0 },
 	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 16, 17, 15, 15, 12,                   0, 0, 0, 0, 0, 0 },
 	{ 31, 31, 31, 31, 32, 12,                  0, 0, 0, 0, 0 },
-	{  4, 34,  3,  5,                    0, 0, 0, 0, 0, 0, 0 }
+	{  4, 34,  3,  5,                    0, 0, 0, 0, 0, 0, 0 },
+	{  1, 34,  2,  2,  3,  4,  5,                 0, 0, 0, 0 },
+	{                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
 JE_byte verticalHeight = 7;
@@ -74,7 +76,7 @@ char destructHelp[25][22];                                               /* [1..
 char weaponNames[17][17];                                                /* [1..17] of string [16] */
 char destructModeName[DESTRUCT_MODES][13];                               /* [1..destructmodes] of string [12] */
 char shipInfo[HELPTEXT_SHIPINFO_COUNT][2][256];                          /* [1..13, 1..2] of string */
-char menuInt[MENU_MAX+1][11][18];                                        /* [0..14, 1..11] of string [17] */
+char menuInt[MENU_MAX+1][11][18];                                        /* [0..15, 1..11] of string [17] */
 
 static void decrypt_string(char *s, size_t len)
 {
@@ -183,8 +185,8 @@ void JE_HBox(SDL_Surface *screen, int x, int y, unsigned int  messagenum, unsign
 
 void JE_loadHelpText(void)
 {
-	const unsigned int menuInt_entries[MENU_MAX + 1] = { -1, 7, 9, 8, -1, -1, 11, -1, -1, -1, 6, 4, 6, 7, 5 };
-	
+	const unsigned int menuInt_entries[MENU_MAX + 1] = { -1, 7, 9, 8, -1, -1, 11, -1, -1, -1, 6, 4, 6, 7, 5, 7 };
+
 	FILE *f = dir_fopen_die(data_dir(), "tyrian.hdt", "rb");
 	fread_s32_die(&episode1DataLoc, 1, f);
 
@@ -258,6 +260,8 @@ void JE_loadHelpText(void)
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[3]; ++i)
 		read_encrypted_pascal_string(menuInt[3][i], sizeof(menuInt[3][i]), f);
+	memcpy(menuInt[3][8], menuInt[3][7], sizeof(menuInt[3][8]));
+	SDL_strlcpy(menuInt[3][7], "2 Player Inputs", sizeof(menuInt[3][7]));
 	skip_pascal_string(f);
 
 	/*InGame Menu*/
@@ -292,14 +296,20 @@ void JE_loadHelpText(void)
 
 	// gameplay mode names
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(gameplay_name); ++i)
+	for (unsigned int i = 0; i < COUNTOF(gameplay_name)-1; ++i)
 		read_encrypted_pascal_string(gameplay_name[i], sizeof(gameplay_name[i]), f);
+	memcpy(gameplay_name[5], gameplay_name[4], sizeof(gameplay_name[4]));
+	SDL_strlcpy(gameplay_name[4], "2 Player Full Game", sizeof(gameplay_name[4]));
 	skip_pascal_string(f);
 
 	/*Menu 10 - 2Player Main*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[10]; ++i)
 		read_encrypted_pascal_string(menuInt[10][i], sizeof(menuInt[10][i]), f);
+	memcpy(menuInt[10][2], menuInt[10][4], sizeof(menuInt[10][2]));
+	memcpy(menuInt[10][3], menuInt[10][5], sizeof(menuInt[10][3]));
+	SDL_strlcpy(menuInt[10][4], "", sizeof(menuInt[10][4]));
+	SDL_strlcpy(menuInt[10][5], "", sizeof(menuInt[10][5]));
 	skip_pascal_string(f);
 
 	/*Input Devices*/
@@ -381,12 +391,32 @@ void JE_loadHelpText(void)
 		read_encrypted_pascal_string(shipInfo[i][0], sizeof(shipInfo[i][0]), f);
 		read_encrypted_pascal_string(shipInfo[i][1], sizeof(shipInfo[i][1]), f);
 	}
+	SDL_strlcpy(shipInfo[10][0], "The ~Silver Ship~ is a powerful fighter in its own right but can be combined with the ~Dragonwing~ to create 150 tons of deadly space fighter technology called ~The Steel Dragon~. When in combined form the ~Silver Ship~ is known as the ~Dragonhead~", sizeof(shipInfo[10][0]));
+	SDL_strlcpy(shipInfo[10][1], "This concept was developed recently by a new firm, based on the jungle planet of Torm. Its name comes from the dragons which thrive there. Three times as fast and hundreds of times more powerful than other fighters, this starship lives up to its namesake", sizeof(shipInfo[10][1]));
 	skip_pascal_string(f);
 
 	/*Menu 12 - Network Options*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[14]; ++i)
 		read_encrypted_pascal_string(menuInt[14][i], sizeof(menuInt[14][i]), f);
+
+	/*2 Player Full Game Menu*/
+	for (unsigned int i = 0, ii = 0; i < menuInt_entries[15]; ++i) {
+		if (i > 3) ii = 1;
+		if (i == 3) {
+			SDL_strlcpy(menuInt[15][i], "Upgrade Player 1", sizeof(menuInt[15][i]));
+			SDL_strlcpy(menuInt[15][i + 1], "Upgrade Player 2", sizeof(menuInt[15][i + 1]));
+		}
+		else {
+			memcpy(menuInt[15][i + ii], menuInt[1][i], sizeof(menuInt[15][i + ii]));
+		}
+	}
+
+	/*2 Player Input Selection*/
+	SDL_strlcpy(menuInt[16][0], "Player Inputs", sizeof(menuInt[16][0]));
+	SDL_strlcpy(menuInt[16][1], "Player 1 Input", sizeof(menuInt[16][1]));
+	SDL_strlcpy(menuInt[16][2], "Player 2 Input", sizeof(menuInt[16][2]));
+	SDL_strlcpy(menuInt[16][3], "Done", sizeof(menuInt[16][3]));
 
 	fclose(f);
 }
