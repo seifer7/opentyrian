@@ -37,6 +37,7 @@ extern JE_byte helpBoxColor, helpBoxBrightness, helpBoxShadeType;
 #define HELPTEXT_MISCTEXT_COUNT 68
 #define HELPTEXT_MISCTEXTB_COUNT 5
 #define HELPTEXT_MISCTEXTB_SIZE 11
+#define HELPTEXT_MAINMENU_COUNT 7
 #define HELPTEXT_MENUTEXT_SIZE 21
 #define HELPTEXT_MAINMENUHELP_COUNT 34
 #define HELPTEXT_NETWORKTEXT_COUNT 4
@@ -44,13 +45,15 @@ extern JE_byte helpBoxColor, helpBoxBrightness, helpBoxShadeType;
 #define HELPTEXT_SUPERSHIPS_COUNT 11
 #define HELPTEXT_SPECIALNAME_COUNT 9
 #define HELPTEXT_SHIPINFO_COUNT 13
+#define HELPTEXT_GAMEPLAY_MENU_COUNT 5
+#define HELPTEXT_EPISODE_MENU_COUNT 6
+#define HELPTEXT_DIFFICULTY_MENU_COUNT 7
 
 extern char helpTxt[39][231];
 extern char pName[21][16];
 extern char miscText[HELPTEXT_MISCTEXT_COUNT][42];
 extern char miscTextB[HELPTEXT_MISCTEXTB_COUNT][HELPTEXT_MISCTEXTB_SIZE];
 extern char keyName[8][18];
-extern char menuText[7][HELPTEXT_MENUTEXT_SIZE];
 extern char outputs[9][31];
 extern char topicName[6][21];
 extern char mainMenuHelp[HELPTEXT_MAINMENUHELP_COUNT][66];

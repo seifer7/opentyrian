@@ -128,6 +128,7 @@
     <ClCompile Include="..\src\jukebox.c" />
     <ClCompile Include="..\src\keyboard.c" />
     <ClCompile Include="..\src\lds_play.c" />
+    <ClCompile Include="..\src\localization.c" />
     <ClCompile Include="..\src\loudness.c" />
     <ClCompile Include="..\src\lvllib.c" />
     <ClCompile Include="..\src\lvlmast.c" />
@@ -179,6 +180,7 @@
     <ClInclude Include="..\src\jukebox.h" />
     <ClInclude Include="..\src\keyboard.h" />
     <ClInclude Include="..\src\lds_play.h" />
+    <ClInclude Include="..\src\localization.h" />
     <ClInclude Include="..\src\loudness.h" />
     <ClInclude Include="..\src\lvllib.h" />
     <ClInclude Include="..\src\lvlmast.h" />

@@ -19,6 +19,7 @@
 #include "opentyr.h"
 
 #include "config.h"
+#include "localization.h"
 #include "destruct.h"
 #include "editship.h"
 #include "episodes.h"
@@ -748,6 +749,8 @@ void setupMenu(void)
 int main(int argc, char *argv[])
 {
 	mt_srand(time(NULL));
+
+	language_load();
 
 	printf("\nWelcome to... >> %s %s <<\n\n", opentyrian_str, opentyrian_version);
 

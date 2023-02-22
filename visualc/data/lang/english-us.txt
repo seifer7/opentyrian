@@ -1,0 +1,41 @@
+# This line is a comment
+
+# Main Menu Options
+OPENTYRIAN              :OpenTyrian
+START_NEW_GAME          :Start New Game
+LOAD_GAME               :Load Game
+HIGH_SCORES             :High Scores
+INSTRUCTIONS            :Instructions
+SETUP                   :Setup
+DEMO                    :Demo
+QUIT                    :Quit
+
+# Game Mode Menu Options
+GAMEMODE_MENU_TITLE     :PLAYERS
+1_PLAYER_FULL_GAME      :1 Player Full Game
+1_PLAYER_ARCADE         :1 Player Arcade
+2_PLAYER_ARCADE         :2 Player Arcade
+MODEM_NETWORK_GAME      :Modem/Network Game
+
+# Episode Names
+EPISODE_MENU_TITLE      :Select an Episode
+EPISODE_1               :Episode 1: Escape
+EPISODE_2               :Episode 2: Treachery
+EPISODE_3               :Episode 3: Mission: Suicide
+EPISODE_4               :Episode 4: An End to Fate
+EPISODE_5               :Episode ?: Bonus
+
+# Difficulty Names
+DIFFICULTY_MENU_TITLE   :Difficulty Level
+DIFFICULTY_EASY         :Easy
+DIFFICULTY_NORMAL       :Normal
+DIFFICULTY_HARD         :Hard
+DIFFICULTY_IMPOSSIBLE   :Impossible
+DIFFICULTY_SUICIDE      :Suicide
+DIFFICULTY_LORDOFGAME   :Lord of Game
+
+# Datacubes
+# Body uses "|" as linebreaks and "~" to ~highlight words~.
+DATACUBE_1_1_TITLE      :~TYRIAN~ DATAFLUX 040-54-871
+DATACUBE_1_1_HEADER     :Data
+DATACUBE_1_1_BODY       :After gathering all the available data, I think I've found the safest course into Tyrian orbit from my landing platform...|After heading due west out of the Fauchi mines you should come in contact with the floating battle platforms. Watch for the auto targeting plasma turrets and especially the ~construction~ ~claws~. |Whoever designed these platforms sure counted on spies and infiltrators, as they're loaded with small squadrons of surface ~attack~ ~drones~ as well. |I think these platforms are filled with ~Gravitic Ore~, which would explain why they're floating. No wonder ~Microsol~ wants to mine them so badly. I just hope I don't get intercepted before I reach orbit.

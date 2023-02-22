@@ -19,6 +19,7 @@
 #include "menus.h"
 
 #include "config.h"
+#include "localization.h"
 #include "episodes.h"
 #include "font.h"
 #include "fonthand.h"
@@ -34,12 +35,15 @@
 #include "vga256d.h"
 #include "video.h"
 
-char episode_name[6][31];
-char difficulty_name[7][21];
-char gameplay_name[5][26];
-
 bool gameplaySelect(void)
 {
+	const char* gameplay_name[5] = {
+		_("GAMEMODE_MENU_TITLE"),
+		_("1_PLAYER_FULL_GAME"),
+		_("1_PLAYER_ARCADE"),
+		_("2_PLAYER_ARCADE"),
+		_("MODEM_NETWORK_GAME"),
+	};
 	enum MenuItemIndex
 	{
 		MENU_ITEM_1_PLAYER_FULL_GAME = 0,
@@ -242,6 +246,15 @@ bool gameplaySelect(void)
 
 bool episodeSelect(void)
 {
+	const char* episode_name[6] = {
+		_("EPISODE_MENU_TITLE"),
+		_("EPISODE_1"),
+		_("EPISODE_2"),
+		_("EPISODE_3"),
+		_("EPISODE_4"),
+		_("EPISODE_5"),
+	};
+
 	if (shopSpriteSheet.data == NULL)
 		JE_loadCompShapes(&shopSpriteSheet, '1');  // need mouse pointer sprites
 
@@ -429,6 +442,16 @@ bool episodeSelect(void)
 
 bool difficultySelect(void)
 {
+	const char* difficulty_name[7] = {
+		_("DIFFICULTY_MENU_TITLE"),
+		_("DIFFICULTY_EASY"),
+		_("DIFFICULTY_NORMAL"),
+		_("DIFFICULTY_HARD"),
+		_("DIFFICULTY_IMPOSSIBLE"),
+		_("DIFFICULTY_SUICIDE"),
+		_("DIFFICULTY_LORDOFGAME"),
+	};
+
 	if (shopSpriteSheet.data == NULL)
 		JE_loadCompShapes(&shopSpriteSheet, '1');  // need mouse pointer sprites
 

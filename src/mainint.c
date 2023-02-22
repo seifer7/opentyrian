@@ -20,6 +20,7 @@
 
 #include "backgrnd.h"
 #include "config.h"
+#include "localization.h"
 #include "editship.h"
 #include "episodes.h"
 #include "file.h"
@@ -1019,7 +1020,7 @@ void JE_nextEpisode(void)
 	JE_clr256(VGAScreen);
 	memcpy(colors, palettes[6-1], sizeof(colors));
 
-	JE_dString(VGAScreen, JE_fontCenter(episode_name[episodeNum], SMALL_FONT_SHAPES), 130, episode_name[episodeNum], SMALL_FONT_SHAPES);
+	JE_dString(VGAScreen, JE_fontCenter(_n("EPISODE_",episodeNum), SMALL_FONT_SHAPES), 130, _n("EPISODE_", episodeNum), SMALL_FONT_SHAPES);
 	JE_dString(VGAScreen, JE_fontCenter(miscText[5-1], SMALL_FONT_SHAPES), 185, miscText[5-1], SMALL_FONT_SHAPES);
 
 	JE_showVGA();
@@ -1136,7 +1137,7 @@ void JE_highScoreScreen(void)
 		const bool disabled = !episodeAvail[episodeIndex];
 
 		// Draw episode header.
-		draw_font_hv_shadow(VGAScreen, xCenter, yEpisodeHeader, episode_name[episodeIndex + 1], normal_font, centered, 15, -3 + (disabled ? -4 : 0), false, 2);
+		draw_font_hv_shadow(VGAScreen, xCenter, yEpisodeHeader, _n("EPISODE_", episodeIndex + 1), normal_font, centered, 15, -3 + (disabled ? -4 : 0), false, 2);
 
 		char buffer[29];
 
@@ -2171,7 +2172,7 @@ void JE_highScoreCheck(void)
 				JE_loadPic(VGAScreen, 2, false);
 
 				JE_dString(VGAScreen, JE_fontCenter(miscText[50], FONT_SHAPES), 10, miscText[50], FONT_SHAPES);
-				JE_dString(VGAScreen, JE_fontCenter(episode_name[episodeNum], SMALL_FONT_SHAPES), 35, episode_name[episodeNum], SMALL_FONT_SHAPES);
+				JE_dString(VGAScreen, JE_fontCenter(_n("EPISODE_", episodeNum), SMALL_FONT_SHAPES), 35, _n("EPISODE_", episodeNum), SMALL_FONT_SHAPES);
 
 				for (int i = first_slot; i < slot_limit; ++i)
 				{

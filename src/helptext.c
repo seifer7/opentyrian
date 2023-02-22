@@ -57,7 +57,6 @@ char pName[21][16];                                                      /* [1..
 char miscText[HELPTEXT_MISCTEXT_COUNT][42];                              /* [1..68] of string [41] */
 char miscTextB[HELPTEXT_MISCTEXTB_COUNT][HELPTEXT_MISCTEXTB_SIZE];       /* [1..5] of string [10] */
 char keyName[8][18];                                                     /* [1..8] of string [17] */
-char menuText[7][HELPTEXT_MENUTEXT_SIZE];                                /* [1..7] of string [20] */
 char outputs[9][31];                                                     /* [1..9] of string [30] */
 char topicName[6][21];                                                   /* [1..6] of string [20] */
 char mainMenuHelp[HELPTEXT_MAINMENUHELP_COUNT][66];                      /* [1..34] of string [65] */
@@ -220,8 +219,8 @@ void JE_loadHelpText(void)
 
 	/*Main Menu*/
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(menuText); ++i)
-		read_encrypted_pascal_string(menuText[i], sizeof(menuText[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_MAINMENU_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Event text*/
@@ -280,20 +279,20 @@ void JE_loadHelpText(void)
 
 	// episode names
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(episode_name); ++i)
-		read_encrypted_pascal_string(episode_name[i], sizeof(episode_name[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_EPISODE_MENU_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	// difficulty names
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(difficulty_name); ++i)
-		read_encrypted_pascal_string(difficulty_name[i], sizeof(difficulty_name[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_DIFFICULTY_MENU_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	// gameplay mode names
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(gameplay_name); ++i)
-		read_encrypted_pascal_string(gameplay_name[i], sizeof(gameplay_name[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_GAMEPLAY_MENU_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Menu 10 - 2Player Main*/

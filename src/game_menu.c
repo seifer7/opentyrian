@@ -1748,8 +1748,10 @@ void load_cubes(void)
 bool load_cube(int cube_slot, int cube_index)
 {
 	FILE *f = dir_fopen_die(data_dir(), cube_file, "rb");
+	int cube_id = cube_index;
 
 	char buf[256];
+	char* cube_text;
 
 	// seek to the cube
 	while (cube_index > 0)
@@ -1765,81 +1767,70 @@ bool load_cube(int cube_slot, int cube_index)
 	read_encrypted_pascal_string(cube[cube_slot].title, sizeof(cube[cube_slot].title), f);
 	read_encrypted_pascal_string(cube[cube_slot].header, sizeof(cube[cube_slot].header), f);
 
+	__nn(cube[cube_slot].title, "DATACUBE_%d_%d_TITLE", sizeof(cube[cube_slot].title), episodeNum, cube_id);
+	__nn(cube[cube_slot].header, "DATACUBE_%d_%d_HEADER", sizeof(cube[cube_slot].header), episodeNum, cube_id);
+	cube_text = _nn("DATACUBE_%d_%d_BODY", episodeNum, cube_id);
+	if (cube_text != NULL) cube_text[strlen(cube_text)] = '\0';
+
 	uint line = 0, line_chars = 0, line_width = 0;
 
-	// for each line of decrypted text, split the line into words
+	// for each line of  text, split the line into words
 	// and add them individually to the lines of wrapped text
-	for (; ; )
+	uint word_start = 0;
+	for (uint i = 0; ; ++i)
 	{
-		read_encrypted_pascal_string(buf, sizeof(buf), f);
+		if (cube_text == NULL) break;
 
-		// end of data
-		if (buf[0] == '*')
-			break;
+		bool end_of_file = (cube_text[i] == '\0'),
+				end_of_line = (end_of_file || cube_text[i] == '|'),
+			    end_of_word = (end_of_line || cube_text[i] == ' ');
 
-		// new paragraph
-		if (strlen(buf) == 0)
+		if (end_of_word)
 		{
-			if (line_chars == 0)
-				line += 4;  // subsequent new paragaphs indicate 4-line break
-			else
-				++line;
-			line_chars = 0;
-			line_width = 0;
+			cube_text[i] = '\0';
 
-			continue;
-		}
+			char *word = &cube_text[word_start];
+			word_start = i + 1;
 
-		uint word_start = 0;
-		for (uint i = 0; ; ++i)
-		{
-			bool end_of_line = (buf[i] == '\0'),
-			     end_of_word = end_of_line || (buf[i] == ' ');
+			uint word_chars = strlen(word),
+				    word_width = JE_textWidth(word, TINY_FONT);
 
-			if (end_of_word)
+			// word won't fit; no can do
+			if (word_chars > cube_line_chars || word_width > cube_line_width)
+				break;
+
+			bool prepend_space = true;
+
+			line_chars += word_chars + (prepend_space ? 1 : 0);
+			line_width += word_width + (prepend_space ? 6 : 0);
+
+			// word won't fit on current line; use next
+			if (line_chars > cube_line_chars || line_width > cube_line_width)
 			{
-				buf[i] = '\0';
+				++line;
+				line_chars = word_chars;
+				line_width = word_width;
 
-				char *word = &buf[word_start];
-				word_start = i + 1;
-
-				uint word_chars = strlen(word),
-				     word_width = JE_textWidth(word, TINY_FONT);
-
-				// word won't fit; no can do
-				if (word_chars > cube_line_chars || word_width > cube_line_width)
-					break;
-
-				bool prepend_space = true;
-
-				line_chars += word_chars + (prepend_space ? 1 : 0);
-				line_width += word_width + (prepend_space ? 6 : 0);
-
-				// word won't fit on current line; use next
-				if (line_chars > cube_line_chars || line_width > cube_line_width)
-				{
-					++line;
-					line_chars = word_chars;
-					line_width = word_width;
-
-					prepend_space = false;
-				}
-
-				// append word
-				if (line < COUNTOF(cube->text))
-				{
-					if (prepend_space)
-						strcat(cube[cube_slot].text[line], " ");
-					strcat(cube[cube_slot].text[line], word);
-
-					// track last line with text
-					cube[cube_slot].last_line = line + 1;
-				}
+				prepend_space = false;
 			}
 
-			if (end_of_line)
-				break;
+			// append word
+			if (line < COUNTOF(cube->text))
+			{
+				if (prepend_space)
+					strcat(cube[cube_slot].text[line], " ");
+				strcat(cube[cube_slot].text[line], word);
+
+				// track last line with text
+				cube[cube_slot].last_line = line + 1;
+			}
 		}
+		if (end_of_line) {
+			++line;
+			line_chars = 0;
+			line_width = 0;
+		}
+		if (end_of_file) break;
 	}
 
 	fclose(f);

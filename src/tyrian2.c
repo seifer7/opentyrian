@@ -3255,6 +3255,15 @@ void networkStartScreen(void)
 
 bool titleScreen(void)
 {
+	const char* menuText[7] = {
+		_("START_NEW_GAME"),
+		_("LOAD_GAME"),
+		_("HIGH_SCORES"),
+		_("INSTRUCTIONS"),
+		_("SETUP"),
+		_("DEMO"),
+		_("QUIT")
+	};
 	enum MenuItemIndex
 	{
 		MENU_ITEM_NEW_GAME = 0,
@@ -3265,8 +3274,6 @@ bool titleScreen(void)
 		MENU_ITEM_DEMO,
 		MENU_ITEM_QUIT,
 	};
-
-	SDL_strlcpy(menuText[4], "Setup", sizeof menuText[4]);  // override "Ordering Info"
 
 	if (shopSpriteSheet.data == NULL)
 		JE_loadCompShapes(&shopSpriteSheet, '1');  // need mouse pointer sprites

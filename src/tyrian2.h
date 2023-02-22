@@ -21,6 +21,7 @@
 
 #include "opentyr.h"
 
+#include "localization.h"
 #include "varz.h"
 #include "helptext.h"
 
