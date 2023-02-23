@@ -1026,17 +1026,17 @@ start_level_first:
 	for (uint i = 0; i < COUNTOF(enemyShotAvail); i++)
 	{
 		enemyShotAvail[i] = 1;
-		player[i].option_attachment_move = 0;    /*Launch the Attachments!*/
-		player[i].option_attachment_linked = true;
 	}
 
 	/*Initialize Shots*/
 	memset(playerShotData,   0, sizeof(playerShotData));
 	memset(shotAvail,        0, sizeof(shotAvail));
-	memset(&player[0].shots_multi_pos, 1, sizeof(player[0].shots_multi_pos));
-	memset(&player[1].shots_multi_pos, 1, sizeof(player[1].shots_multi_pos));
-	memset(&player[0].shots_repeat, 1, sizeof(player[0].shots_repeat));
-	memset(&player[1].shots_repeat, 1, sizeof(player[1].shots_repeat));
+	for (uint i = 0; i < COUNTOF(player); ++i) {
+		memset(&player[i].shots_multi_pos, 1, sizeof(player[i].shots_multi_pos));
+		memset(&player[i].shots_repeat, 1, sizeof(player[i].shots_repeat));
+		player[i].option_attachment_move = 0;    /*Launch the Attachments!*/
+		player[i].option_attachment_linked = true;
+	}
 
 	memset(button,           0, sizeof(button));
 
