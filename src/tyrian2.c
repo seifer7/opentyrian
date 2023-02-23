@@ -876,7 +876,7 @@ start_level_first:
 	lastPower = power / 10;
 
 	/* Initial Text */
-	JE_drawTextWindow(miscText[20]);
+	JE_drawTextWindow(_("GOOD_LUCK_"));
 
 	/* Setup Armor/Shield Data */
 	shieldWait = 1;
@@ -2108,7 +2108,7 @@ draw_player_shot_loop_end:
 	if (displayTime > 0)
 	{
 		displayTime--;
-		JE_outTextAndDarken(VGAScreen, 90, 10, miscText[59], 15, (JE_byte)flash - 8, FONT_SHAPES);
+		JE_outTextAndDarken(VGAScreen, 90, 10, _("SECRET_LEVEL"), 15, (JE_byte)flash - 8, FONT_SHAPES);
 		flash += flashChange;
 		if (flash > 4 || flash == 0)
 			flashChange = -flashChange;
@@ -2140,7 +2140,7 @@ draw_player_shot_loop_end:
 			soundQueue[7] = S_WARNING;
 		}
 
-		JE_textShade (VGAScreen, 140, 6, miscText[66], 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
+		JE_textShade (VGAScreen, 140, 6, _("TIME_REMAINING"), 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
 		sprintf(buffer, "%.1f", levelTimerCountdown / 100.0f);
 		JE_dString (VGAScreen, 100, 2, buffer, SMALL_FONT_SHAPES);
 	}
@@ -2162,7 +2162,7 @@ draw_player_shot_loop_end:
 				if (play_demo || normalBonusLevelCurrent || bonusLevelCurrent)
 					reallyEndLevel = true;
 				else
-					JE_dString(VGAScreen, 120, 60, miscText[21], FONT_SHAPES); // game over
+					JE_dString(VGAScreen, 120, 60, _("GAME_OVER"), FONT_SHAPES); // game over
 
 				if (firstGameOver)
 				{
@@ -2638,13 +2638,13 @@ new_game:
 						if (twoPlayerMode)
 						{
 							for (uint i = 0; i < 2; ++i)
-								snprintf(levelWarningText[i], sizeof(*levelWarningText), "%s %lu", miscText[40 + i], player[i].cash);
+								snprintf(levelWarningText[i], sizeof(*levelWarningText), "%s %lu", (i == 0 ? _("PLAYER_1_SCORE_") : _("PLAYER_2_SCORE_")), player[i].cash);
 							strcpy(levelWarningText[2], "");
 							levelWarningLines = 3;
 						}
 						else
 						{
-							sprintf(levelWarningText[0], "%s %lu", miscText[37], JE_totalScore(&player[0]));
+							sprintf(levelWarningText[0], "%s %lu", _("YOUR_TOTAL_SCORE_"), JE_totalScore(&player[0]));
 							strcpy(levelWarningText[1], "");
 							levelWarningLines = 2;
 						}
@@ -2690,7 +2690,7 @@ new_game:
 							{
 								if (SANextShip[superArcadeMode] == SA_ENGAGE)
 								{
-									sprintf(buffer, "%s %s", miscTextB[4], pName[0]);
+									sprintf(buffer, "%s %s", _("SUPER"), _("PLANETNAME_0"));
 									JE_dString(VGAScreen, JE_fontCenter(buffer, FONT_SHAPES), 100, buffer, FONT_SHAPES);
 
 									sprintf(buffer, "Or play... %s", specialName[7]);
@@ -3709,7 +3709,7 @@ void newSuperTyrianGame(void)
 	JE_outText(VGAScreen, 10, 60, "Prepare to play...", 15, 4);
 
 	char buf[10 + 1 + 15 + 1];
-	snprintf(buf, sizeof(buf), "%s %s", miscTextB[4], pName[0]);
+	snprintf(buf, sizeof(buf), "%s %s", _("SUPER"), _("PLANETNAME_0"));
 	JE_dString(VGAScreen, JE_fontCenter(buf, FONT_SHAPES), 110, buf, FONT_SHAPES);
 
 	play_song(16);
@@ -3827,7 +3827,7 @@ void JE_displayText(void)
 	if (warningRed)
 		tempW = 7 * 16 + 6;
 
-	JE_outCharGlow(JE_fontCenter(miscText[4], TINY_FONT), tempW, miscText[4]);
+	JE_outCharGlow(JE_fontCenter(_("PRESS_A_KEY"), TINY_FONT), tempW, _("PRESS_A_KEY"));
 
 	do
 	{
@@ -4420,7 +4420,7 @@ void JE_eventSystem(void)
 		}
 		else
 		{
-			JE_drawTextWindow(outputs[eventRec[eventLoc-1].eventdat-1]);
+			JE_drawTextWindow(_n("LVLEVENT_WARNING_%d", eventRec[eventLoc - 1].eventdat - 1));
 			soundQueue[3] = windowTextSamples[eventRec[eventLoc-1].eventdat-1];
 		}
 		break;

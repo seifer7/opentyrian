@@ -342,10 +342,12 @@ void JE_itemScreen(void)
 
 				/* Write save game slot */
 				if (x == max)
-					strcpy(tempStr, miscText[6-1]);
+					strcpy(tempStr, _("EXIT_TO_GAME_MENU"));
 				else if (saveFiles[x-2].level == 0)
-					strcpy(tempStr, miscText[3-1]);
-				else
+					strcpy(tempStr, _("EMPTY_SLOT"));
+				else if (x == 12 || x == 23)
+					strcpy(tempStr, _("LAST_LEVEL"));
+				else 
 					strcpy(tempStr, saveFiles[x-2].name);
 
 				int tempY = 38 + (x - min)*11;
@@ -359,7 +361,7 @@ void JE_itemScreen(void)
 
 					if (saveFiles[x-2].level == 0)
 					{
-						strcpy(tempStr, "-----"); /* Empty save slot */
+						strcpy(tempStr, _("EMPTY_SAVE_SLOT_LINE")); /* Empty save slot */
 					}
 					else
 					{
@@ -367,7 +369,7 @@ void JE_itemScreen(void)
 
 						strcpy(tempStr, saveFiles[x-2].levelName);
 
-						snprintf(buf, sizeof buf, "%s%d", miscTextB[1-1], saveFiles[x-2].episode);
+						snprintf(buf, sizeof buf, "%s%d", _("EP"), saveFiles[x-2].episode);
 						JE_textShade(VGAScreen, 297, tempY, buf, temp2 / 16, temp2 % 16 - 8, DARKEN);
 					}
 
@@ -407,22 +409,22 @@ void JE_itemScreen(void)
 		{
 			const char *const menu_item[] =
 			{
-				"JOYSTICK",
-				"ANALOG AXES",
-				" SENSITIVITY",
-				" THRESHOLD",
-				menuInt[6][1],
-				menuInt[6][4],
-				menuInt[6][2],
-				menuInt[6][3],
-				menuInt[6][5],
-				menuInt[6][6],
-				menuInt[6][7],
-				menuInt[6][8],
-				"MENU",
-				"PAUSE",
-				menuInt[6][9],
-				menuInt[6][10]
+				_("JOYSTICK"),
+				_("ANALOG_AXES"),
+				_("_SENSITIVITY"),
+				_("_THRESHOLD"),
+				_("KEY_UP"),
+				_("KEY_RIGHT"),
+				_("KEY_DOWN"),
+				_("KEY_LEFT"),
+				_("KEY_FIRE"),
+				_("KEY_CHANGEFIRE"),
+				_("KEY_LEFTSIDEKICK"),
+				_("KEY_RIGHTSIDEKICK"),
+				_("KEY_MENU"),
+				_("KEY_PAUSE"),
+				_("KEY_RESET_TO_DEFAULT"),
+				_("KEY_DONE")
 			};
 
 			for (uint i = 0; i < COUNTOF(menu_item); i++)
@@ -575,7 +577,7 @@ void JE_itemScreen(void)
 				/* Draw DONE */
 				if (tempW == menuChoices[curMenu]-1)
 				{
-					strcpy(tempStr, miscText[13]);
+					strcpy(tempStr, _("DONE"));
 				}
 				JE_textShade(VGAScreen, 185, tempY, tempStr, temp2 / 16, temp2 % 16 - 8 - afford_shade, DARKEN);
 
@@ -633,7 +635,7 @@ void JE_itemScreen(void)
 
 				for (uint i = 0; i < 2; ++i)
 				{
-					snprintf(buf, sizeof(buf), "%s %lu", miscText[40 + i], player[i].cash);
+					snprintf(buf, sizeof(buf), "%s %lu", (i == 0 ? _("PLAYER_1_SCORE_") : _("PLAYER_2_SCORE_")), player[i].cash);
 					JE_textShade(VGAScreen, 25, 50 + 10 * i, buf, 15, 0, FULL_SHADE);
 				}
 			}
@@ -680,7 +682,7 @@ void JE_itemScreen(void)
 			{
 				if (cubeMax == 0)
 				{
-					JE_helpBox(VGAScreen, 166, 80, miscText[16 - 1], 30);
+					JE_helpBox(VGAScreen, 166, 80, _("NO_DATA_AVAILABLE_NOW"), 30);
 					tempW = 160;
 					temp2 = 252;
 				}
@@ -715,7 +717,7 @@ void JE_itemScreen(void)
 					tempW = 44 + (x - 1) * 28;
 				}
 
-				JE_textShade(VGAScreen, 172, tempW, miscText[6 - 1], temp2 / 16, (temp2 % 16) - 8, DARKEN);
+				JE_textShade(VGAScreen, 172, tempW, _("EXIT_TO_GAME_MENU"), temp2 / 16, (temp2 % 16) - 8, DARKEN);
 			}
 
 			if (curSel[MENU_DATA_CUBES] < menuChoices[MENU_DATA_CUBES])
@@ -855,10 +857,10 @@ void JE_itemScreen(void)
 					                   : (yLoc * 100) / ((cube[currentCube].last_line - 9) * 12);
 
 					char buf[55];
-					snprintf(buf, sizeof(buf), "%s %d%%", miscText[11], percent_read);
+					snprintf(buf, sizeof(buf), "%s %d%%", _("READ_"), percent_read);
 					JE_outTextAndDarken(VGAScreen, 176, 160, buf, 14, 1, TINY_FONT);
 
-					JE_dString(VGAScreen, 260, 160, miscText[12], SMALL_FONT_SHAPES);
+					JE_dString(VGAScreen, 260, 160, _("EXIT"), SMALL_FONT_SHAPES);
 
 					if (temp2 == 0)
 						yChg = 0;
@@ -887,7 +889,7 @@ void JE_itemScreen(void)
 						JE_drawMenuHeader();
 						JE_drawMenuChoices();
 						if (extraGame)
-							JE_dString(VGAScreen, 170, 140, miscText[68 - 1], FONT_SHAPES);
+							JE_dString(VGAScreen, 170, 140, _("_BONUS_GAME_"), FONT_SHAPES);
 					}
 
 					if (curMenu == MENU_DATA_CUBES &&
@@ -2364,8 +2366,8 @@ JE_boolean JE_quitRequest(void)
 			setDelay(4);
 
 			blit_sprite(VGAScreen, 50, 50, OPTION_SHAPES, 35);  // message box
-			JE_textShade(VGAScreen, 70, 60, miscText[28], 0, 5, FULL_SHADE);
-			JE_helpBox(VGAScreen, 70, 90, miscText[30], 30);
+			JE_textShade(VGAScreen, 70, 60, _("ARE_YOU_SURE_EXIT"), 0, 5, FULL_SHADE);
+			JE_helpBox(VGAScreen, 70, 90, _("YOU_WILL_RET_TO_MAIN_MENU"), 30);
 
 			col += colC;
 			if (col > 8 || col < 2)
@@ -2373,15 +2375,15 @@ JE_boolean JE_quitRequest(void)
 
 			int temp_x, temp_c;
 
-			temp_x = 54 + 45 - (JE_textWidth(miscText[9], FONT_SHAPES) / 2);
+			temp_x = 54 + 45 - (JE_textWidth(_("OK"), FONT_SHAPES) / 2);
 			temp_c = quit_selected ? col - 12 : -5;
 
-			JE_outTextAdjust(VGAScreen, temp_x, 128, miscText[9], 15, temp_c, FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, temp_x, 128, _("OK"), 15, temp_c, FONT_SHAPES, true);
 
-			temp_x = 149 + 45 - (JE_textWidth(miscText[10], FONT_SHAPES) / 2);
+			temp_x = 149 + 45 - (JE_textWidth(_("CANCEL"), FONT_SHAPES) / 2);
 			temp_c = !quit_selected ? col - 12 : -5;
 
-			JE_outTextAdjust(VGAScreen, temp_x, 128, miscText[10], 15, temp_c, FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, temp_x, 128, _("CANCEL"), 15, temp_c, FONT_SHAPES, true);
 
 			if (has_mouse)
 			{
@@ -2496,7 +2498,7 @@ void JE_genItemMenu(JE_byte itemNum)
 		strcpy(menuInt[5][tempW], tempStr);
 	}
 
-	strcpy(menuInt[5][tempW], miscText[13]);
+	strcpy(menuInt[5][tempW], _("DONE"));
 
 	curSel[MENU_UPGRADE_SUB] = temp3;
 }
@@ -2568,9 +2570,9 @@ void JE_menuFunction(JE_byte select)
 			for (x = 0; x < mapPNum; x++)
 			{
 				temp = mapPlanet[x];
-				strcpy(menuInt[4][x + 1], pName[temp - 1]);
+				strcpy(menuInt[4][x + 1], _n("PLANETNAME_%d",temp-1));
 			}
-			strcpy(menuInt[4][x + 1], miscText[5]);
+			strcpy(menuInt[4][x + 1], _("EXIT_TO_GAME_MENU"));
 			break;
 		case 7: //quit
 			if (JE_quitRequest())
@@ -2986,7 +2988,7 @@ void JE_drawShipSpecs(SDL_Surface * screen, SDL_Surface * temp_screen)
 	JE_helpBox(screen, 100, 100, shipInfo[player[0].items.ship-1][1], 40);
 	verticalHeight = 7;
 
-	JE_outText(screen, JE_fontCenter(miscText[4], TINY_FONT), 190, miscText[4], 12, 2);
+	JE_outText(screen, JE_fontCenter(_("PRESS_A_KEY"), TINY_FONT), 190, _("PRESS_A_KEY"), 12, 2);
 
 	//now draw the green ship over that.
 	//This hardcoded stuff is for positioning our little ship graphic

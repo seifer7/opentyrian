@@ -49,6 +49,7 @@
 
 #include "config.h"
 #include "config_file.h"
+#include "localization.h"
 #include "fonthand.h"
 #include "helptext.h"
 #include "keyboard.h"
@@ -739,8 +740,8 @@ static void JE_introScreen(void)
 {
 	memcpy(VGAScreen2->pixels, VGAScreen->pixels, VGAScreen2->h * VGAScreen2->pitch);
 	JE_outText(VGAScreen, JE_fontCenter(specialName[7], TINY_FONT), 90, specialName[7], 12, 5);
-	JE_outText(VGAScreen, JE_fontCenter(miscText[64], TINY_FONT), 180, miscText[64], 15, 2);
-	JE_outText(VGAScreen, JE_fontCenter(miscText[65], TINY_FONT), 190, miscText[65], 15, 2);
+	JE_outText(VGAScreen, JE_fontCenter(_("PRESS_F1_FOR_HELP"), TINY_FONT), 180, _("PRESS_F1_FOR_HELP"), 15, 2);
+	JE_outText(VGAScreen, JE_fontCenter(_("F10_TOGGLE_LEFT_CPU_HUMAN"), TINY_FONT), 190, _("F10_TOGGLE_LEFT_CPU_HUMAN"), 15, 2);
 	JE_showVGA();
 	fade_palette(colors, 15, 0, 255);
 
@@ -1397,7 +1398,7 @@ static void JE_pauseScreen(void)
 
 	/* Save our current screen/game world.  We don't want to screw it up while paused. */
 	memcpy(VGAScreen2->pixels, VGAScreen->pixels, VGAScreen2->h * VGAScreen2->pitch);
-	JE_outText(VGAScreen, JE_fontCenter(miscText[22], TINY_FONT), 90, miscText[22], 12, 5);
+	JE_outText(VGAScreen, JE_fontCenter(_("PAUSED"), TINY_FONT), 90, _("PAUSED"), 12, 5);
 	JE_showVGA();
 
 	do  /* wait until user hits a key */

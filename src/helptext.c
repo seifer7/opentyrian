@@ -19,6 +19,7 @@
 #include "helptext.h"
 
 #include "config.h"
+#include "localization.h"
 #include "episodes.h"
 #include "file.h"
 #include "fonthand.h"
@@ -52,12 +53,7 @@ JE_byte helpBoxColor = 12;
 JE_byte helpBoxBrightness = 1;
 JE_byte helpBoxShadeType = FULL_SHADE;
 
-char helpTxt[39][231];                                                   /* [1..39] of string [230] */
-char pName[21][16];                                                      /* [1..21] of string [15] */
-char miscText[HELPTEXT_MISCTEXT_COUNT][42];                              /* [1..68] of string [41] */
-char miscTextB[HELPTEXT_MISCTEXTB_COUNT][HELPTEXT_MISCTEXTB_SIZE];       /* [1..5] of string [10] */
 char keyName[8][18];                                                     /* [1..8] of string [17] */
-char outputs[9][31];                                                     /* [1..9] of string [30] */
 char topicName[6][21];                                                   /* [1..6] of string [20] */
 char mainMenuHelp[HELPTEXT_MAINMENUHELP_COUNT][66];                      /* [1..34] of string [65] */
 char inGameText[6][21];                                                  /* [1..6] of string [20] */
@@ -177,7 +173,7 @@ void JE_helpBox(SDL_Surface *screen,  int x, int y, const char *message, unsigne
 
 void JE_HBox(SDL_Surface *screen, int x, int y, unsigned int  messagenum, unsigned int boxwidth)
 {
-	JE_helpBox(screen, x, y, helpTxt[messagenum-1], boxwidth);
+	JE_helpBox(screen, x, y, _n("HELPTEXT_%d",messagenum-1), boxwidth);
 }
 
 void JE_loadHelpText(void)
@@ -189,32 +185,32 @@ void JE_loadHelpText(void)
 
 	/*Online Help*/
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(helpTxt); ++i)
-		read_encrypted_pascal_string(helpTxt[i], sizeof(helpTxt[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_HELPTXT_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Planet names*/
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(pName); ++i)
-		read_encrypted_pascal_string(pName[i], sizeof(pName[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_PNAME_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Miscellaneous text*/
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(miscText); ++i)
-		read_encrypted_pascal_string(miscText[i], sizeof(miscText[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_MISCTEXT_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Little Miscellaneous text*/
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(miscTextB); ++i)
-		read_encrypted_pascal_string(miscTextB[i], sizeof(miscTextB[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_MISCTEXTB_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Key names*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[6]; ++i)
-		read_encrypted_pascal_string(menuInt[6][i], sizeof(menuInt[6][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Main Menu*/
@@ -225,44 +221,44 @@ void JE_loadHelpText(void)
 
 	/*Event text*/
 	skip_pascal_string(f);
-	for (unsigned int i = 0; i < COUNTOF(outputs); ++i)
-		read_encrypted_pascal_string(outputs[i], sizeof(outputs[i]), f);
+	for (unsigned int i = 0; i < HELPTEXT_OUTPUTS_COUNT; ++i)
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Help topics*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < COUNTOF(topicName); ++i)
-		read_encrypted_pascal_string(topicName[i], sizeof(topicName[i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Main Menu Help*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < COUNTOF(mainMenuHelp); ++i)
-		read_encrypted_pascal_string(mainMenuHelp[i], sizeof(mainMenuHelp[i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Menu 1 - Main*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[1]; ++i)
-		read_encrypted_pascal_string(menuInt[1][i], sizeof(menuInt[1][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Menu 2 - Items*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[2]; ++i)
-		read_encrypted_pascal_string(menuInt[2][i], sizeof(menuInt[2][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Menu 3 - Options*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[3]; ++i)
-		read_encrypted_pascal_string(menuInt[3][i], sizeof(menuInt[3][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*InGame Menu*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < COUNTOF(inGameText); ++i)
-		read_encrypted_pascal_string(inGameText[i], sizeof(inGameText[i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Detail Level*/
@@ -298,7 +294,7 @@ void JE_loadHelpText(void)
 	/*Menu 10 - 2Player Main*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[10]; ++i)
-		read_encrypted_pascal_string(menuInt[10][i], sizeof(menuInt[10][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Input Devices*/
@@ -316,7 +312,7 @@ void JE_loadHelpText(void)
 	/*Menu 11 - 2Player Network*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[11]; ++i)
-		read_encrypted_pascal_string(menuInt[11][i], sizeof(menuInt[11][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*HighScore Difficulty Names*/
@@ -328,13 +324,13 @@ void JE_loadHelpText(void)
 	/*Menu 12 - Network Options*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[12]; ++i)
-		read_encrypted_pascal_string(menuInt[12][i], sizeof(menuInt[12][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Menu 13 - Joystick*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[13]; ++i)
-		read_encrypted_pascal_string(menuInt[13][i], sizeof(menuInt[13][i]), f);
+		skip_pascal_string(f);
 	skip_pascal_string(f);
 
 	/*Joystick Button Assignments*/
@@ -385,7 +381,93 @@ void JE_loadHelpText(void)
 	/*Menu 12 - Network Options*/
 	skip_pascal_string(f);
 	for (unsigned int i = 0; i < menuInt_entries[14]; ++i)
-		read_encrypted_pascal_string(menuInt[14][i], sizeof(menuInt[14][i]), f);
+		skip_pascal_string(f);
 
 	fclose(f);
+
+	// Fill the topicName array with translater strings (help menu)
+	__(topicName[0], "HELPMENU_HELP_MENU", sizeof(topicName[0]));
+	__(topicName[1], "HELPMENU_1P_GAME_MENU", sizeof(topicName[1]));
+	__(topicName[2], "HELPMENU_2P_GAME_MENU", sizeof(topicName[2]));
+	__(topicName[3], "HELPMENU_UPGRADE_SHIP", sizeof(topicName[3]));
+	__(topicName[4], "HELPMENU_OPTIONS", sizeof(topicName[4]));
+	__(topicName[5], "HELPMENU_EXIT_HELP", sizeof(topicName[5]));
+
+	// Fill the menuInt arrays with translated strings
+	__(menuInt[1][0], "1PFMENU_GAME_MENU", sizeof(menuInt[1][0]));
+	__(menuInt[1][1], "1PFMENU_DATA", sizeof(menuInt[1][1]));
+	__(menuInt[1][2], "1PFMENU_SHIP_SPECS", sizeof(menuInt[1][2]));
+	__(menuInt[1][3], "1PFMENU_UPGRADE_SHIP", sizeof(menuInt[1][3]));
+	__(menuInt[1][4], "1PFMENU_OPTIONS", sizeof(menuInt[1][4]));
+	__(menuInt[1][5], "1PFMENU_PLAY_NEXT_LVL", sizeof(menuInt[1][5]));
+	__(menuInt[1][6], "1PFMENU_QUIT", sizeof(menuInt[1][6]));
+
+	__(menuInt[2][0], "UPGMENU_UPGRADE_SHIP", sizeof(menuInt[2][0]));
+	__(menuInt[2][1], "UPGMENU_SHIP_TYPE", sizeof(menuInt[2][1]));
+	__(menuInt[2][2], "UPGMENU_FRONT_GUN", sizeof(menuInt[2][2]));
+	__(menuInt[2][3], "UPGMENU_REAR_GUN", sizeof(menuInt[2][3]));
+	__(menuInt[2][4], "UPGMENU_SHIELD", sizeof(menuInt[2][4]));
+	__(menuInt[2][5], "UPGMENU_GENERATOR", sizeof(menuInt[2][5]));
+	__(menuInt[2][6], "UPGMENU_LEFT_SIDEKICK", sizeof(menuInt[2][6]));
+	__(menuInt[2][7], "UPGMENU_RIGHT_SIDEKICK", sizeof(menuInt[2][7]));
+	__(menuInt[2][8], "UPGMENU_DONE", sizeof(menuInt[2][8]));
+
+	__(menuInt[3][0], "OPTMENU_OPTIONS", sizeof(menuInt[3][0]));
+	__(menuInt[3][1], "OPTMENU_LOAD", sizeof(menuInt[3][1]));
+	__(menuInt[3][2], "OPTMENU_SAVE", sizeof(menuInt[3][2]));
+	__(menuInt[3][3], "OPTMENU_MUSIC", sizeof(menuInt[3][3]));
+	__(menuInt[3][4], "OPTMENU_SOUND", sizeof(menuInt[3][4]));
+	__(menuInt[3][5], "OPTMENU_JOYSTICK", sizeof(menuInt[3][5]));
+	__(menuInt[3][6], "OPTMENU_KEYBOARD", sizeof(menuInt[3][6]));
+	__(menuInt[3][7], "OPTMENU_DONE", sizeof(menuInt[3][7]));
+
+	__(menuInt[6][0], "KEY_CONFIG", sizeof(menuInt[6][0]));
+	__(menuInt[6][1], "KEY_UP", sizeof(menuInt[6][1]));
+	__(menuInt[6][2], "KEY_DOWN", sizeof(menuInt[6][2]));
+	__(menuInt[6][3], "KEY_LEFT", sizeof(menuInt[6][3]));
+	__(menuInt[6][4], "KEY_RIGHT", sizeof(menuInt[6][4]));
+	__(menuInt[6][5], "KEY_FIRE", sizeof(menuInt[6][5]));
+	__(menuInt[6][6], "KEY_CHANGEFIRE", sizeof(menuInt[6][6]));
+	__(menuInt[6][7], "KEY_LEFTSIDEKICK", sizeof(menuInt[6][7]));
+	__(menuInt[6][8], "KEY_RIGHTSIDEKICK", sizeof(menuInt[6][8]));
+	__(menuInt[6][9], "KEY_RESET_TO_DEFAULT", sizeof(menuInt[6][9]));
+	__(menuInt[6][10], "KEY_DONE", sizeof(menuInt[6][10]));
+
+	__(menuInt[10][0], "2PMENU_GAME_MENU", sizeof(menuInt[10][0]));
+	__(menuInt[10][1], "2PMENU_PLAY_NEXT_LVL", sizeof(menuInt[10][1]));
+	__(menuInt[10][2], "2PMENU_PLAYER_1_INPUT", sizeof(menuInt[10][2]));
+	__(menuInt[10][3], "2PMENU_PLAYER_2_INPUT", sizeof(menuInt[10][3]));
+	__(menuInt[10][4], "2PMENU_OPTIONS", sizeof(menuInt[10][4]));
+	__(menuInt[10][5], "2PMENU_QUIT_GAME", sizeof(menuInt[10][5]));
+
+	__(menuInt[11][0], "1PAMENU_GAME_MENU", sizeof(menuInt[11][0]));
+	__(menuInt[11][1], "1PAMENU_PLAY_NEXT_LVL", sizeof(menuInt[11][1]));
+	__(menuInt[11][2], "1PAMENU_OPTIONS", sizeof(menuInt[11][2]));
+	__(menuInt[11][3], "1PAMENU_QUIT_GAME", sizeof(menuInt[11][3]));
+
+	__(menuInt[12][0], "OPTMENU1_OPTIONS", sizeof(menuInt[12][0]));
+	__(menuInt[12][1], "OPTMENU1_JOYSTICK", sizeof(menuInt[12][1]));
+	__(menuInt[12][2], "OPTMENU1_KEYBOARD", sizeof(menuInt[12][2]));
+	__(menuInt[12][3], "OPTMENU1_MUSIC", sizeof(menuInt[12][3]));
+	__(menuInt[12][4], "OPTMENU1_SOUND", sizeof(menuInt[12][4]));
+	__(menuInt[12][5], "OPTMENU1_DONE", sizeof(menuInt[12][5]));
+
+	__(menuInt[13][0], "MENUTITLE_JOYSTICK", sizeof(menuInt[13][0]));
+
+	__(menuInt[14][0], "SUPERMENU_GAME_MENU", sizeof(menuInt[14][0]));
+	__(menuInt[14][1], "SUPERMENU_PLAY_NEXT_LVL", sizeof(menuInt[14][1]));
+	__(menuInt[14][2], "SUPERMENU_SHIP_SPECS", sizeof(menuInt[14][2]));
+	__(menuInt[14][3], "SUPERMENU_OPTIONS", sizeof(menuInt[14][3]));
+	__(menuInt[14][4], "SUPERMENU_QUIT_GAME", sizeof(menuInt[14][4]));
+
+	// Fill in mainMenuHelp array with translated strings
+	for (unsigned int i = 0; i < COUNTOF(mainMenuHelp); ++i)
+		__n(mainMenuHelp[i], "MENU_HINT_%d", sizeof(mainMenuHelp[i]), i);
+
+	__(inGameText[0], "INGAMEMENU_MUSIC_VOL", sizeof(inGameText[0]));
+	__(inGameText[1], "INGAMEMENU_SOUND_VOL", sizeof(inGameText[1]));
+	__(inGameText[2], "INGAMEMENU_DETAIL_LVL", sizeof(inGameText[2]));
+	__(inGameText[3], "INGAMEMENU_GAME_SPEED", sizeof(inGameText[3]));
+	__(inGameText[4], "INGAMEMENU_RETURN_TO_GAME", sizeof(inGameText[4]));
+	__(inGameText[5], "INGAMEMENU_QUIT_LVL", sizeof(inGameText[5]));
 }

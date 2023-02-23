@@ -1,41 +1,335 @@
-# This line is a comment
+# Any line starting with a # symbol is a comment and ignored by the game.
+# Most areas of the game support using "~" symbols to ~highlight~ words.
 
 # Main Menu Options
-OPENTYRIAN              :OpenTyrian
-START_NEW_GAME          :Start New Game
-LOAD_GAME               :Load Game
-HIGH_SCORES             :High Scores
-INSTRUCTIONS            :Instructions
-SETUP                   :Setup
-DEMO                    :Demo
-QUIT                    :Quit
+OPENTYRIAN              :AOpenTyrian
+START_NEW_GAME          :AStart New Game
+LOAD_GAME               :ALoad Game
+HIGH_SCORES             :AHigh Scores
+INSTRUCTIONS            :AInstructions
+SETUP                   :ASetup
+DEMO                    :ADemo
+QUIT                    :AQuit
 
 # Game Mode Menu Options
-GAMEMODE_MENU_TITLE     :PLAYERS
-1_PLAYER_FULL_GAME      :1 Player Full Game
-1_PLAYER_ARCADE         :1 Player Arcade
-2_PLAYER_ARCADE         :2 Player Arcade
-MODEM_NETWORK_GAME      :Modem/Network Game
+GAMEMODE_MENU_TITLE     :APLAYERS
+1_PLAYER_FULL_GAME      :A1 Player Full Game
+1_PLAYER_ARCADE         :A1 Player Arcade
+2_PLAYER_ARCADE         :A2 Player Arcade
+MODEM_NETWORK_GAME      :AModem/Network Game
 
 # Episode Names
-EPISODE_MENU_TITLE      :Select an Episode
-EPISODE_1               :Episode 1: Escape
-EPISODE_2               :Episode 2: Treachery
-EPISODE_3               :Episode 3: Mission: Suicide
-EPISODE_4               :Episode 4: An End to Fate
-EPISODE_5               :Episode ?: Bonus
+EPISODE_MENU_TITLE      :ASelect an Episode
+EPISODE_1               :AEpisode 1: Escape
+EPISODE_2               :AEpisode 2: Treachery
+EPISODE_3               :AEpisode 3: Mission: Suicide
+EPISODE_4               :AEpisode 4: An End to Fate
+EPISODE_5               :AEpisode ?: Bonus
 
 # Difficulty Names
-DIFFICULTY_MENU_TITLE   :Difficulty Level
-DIFFICULTY_EASY         :Easy
-DIFFICULTY_NORMAL       :Normal
-DIFFICULTY_HARD         :Hard
-DIFFICULTY_IMPOSSIBLE   :Impossible
-DIFFICULTY_SUICIDE      :Suicide
-DIFFICULTY_LORDOFGAME   :Lord of Game
+DIFFICULTY_MENU_TITLE   :ADifficulty Level
+DIFFICULTY_EASY         :AEasy
+DIFFICULTY_NORMAL       :ANormal
+DIFFICULTY_HARD         :AHard
+DIFFICULTY_IMPOSSIBLE   :AImpossible
+DIFFICULTY_SUICIDE      :ASuicide
+DIFFICULTY_LORDOFGAME   :ALord of Game
+
+# helpTxt
+HELPTEXT_0               :A~Next Level~ Select the next level to play (usually there is only one selection).
+HELPTEXT_1               :A~DATA~ Here you read the datacubes you collect during some levels. Some cubes have certain... hints. Be sure to read them! Select DONE when you are finished reading your cubes.
+HELPTEXT_2               :A~Player Input~ Select the input device you want to use by pushing left or right. Tyrian will not allow both players to use the same input device.
+HELPTEXT_3               :ATHIS STRING IS NOT USED
+HELPTEXT_4               :A~Upgrade Ship~ You can configure many aspects of your ship. Upgrade points for your ship are gained by shooting enemies and collecting various items.
+HELPTEXT_5               :A~Purchasing~ Use the up/down arrow keys to select the item you want to view. When you purchase the item, a bar will move to show the item you have purchased. You may then exit the menu using done or ESC.
+HELPTEXT_6               :AThe amount of money you will have available after purchasing the item selected is shown at the bottom. Items that are darkened out cost more than you can afford and you will be unable to select them.
+HELPTEXT_7               :A~Ship Type~ Each ship has a different armor rating. Armor is your last line of protection from enemy attack and is not easily repaired in the middile of combat.
+HELPTEXT_8               :A~Front Gun~/~Rear Gun~ Your ship can carry both a front and rear gun. You can change your weapons or upgrade them from here.
+HELPTEXT_9               :ATo ~upgrade~ or ~downgrade~ your existing gun, use the right and left arrow keys or click on the red arrows below your ship. The bars in the center show you what power level your weapons are at.
+HELPTEXT_10              :AThe red arrows and cost displays indicate when you can upgrade or downgrade your weapons. If the right arrow is darkened or the cost is displayed in red, you cannot upgrade further.
+HELPTEXT_11              :ATHIS STRING IS NOT USED
+HELPTEXT_12              :ABe sure to watch the power bar to see how quickly your energy level will drop while firing.
+HELPTEXT_13              :A~Shield~ Your ship is protected by a shield, which you upgrade in the same manner as your ship. Just select the shield you like with the up/down arrow keys, and buy it by pressing the "enter" key or the space bar.
+HELPTEXT_14              :A~Generator~ You need power to fly that ship you're in. Your generator is the most important part of your ship. It determines how many shots you can fire at a time as well as how fast your shield recharges.
+HELPTEXT_15              :ABuy a better generator and you'll have a much better edge. Select your option in the same manner as the other items.
+HELPTEXT_16              :A~Sidekicks~ You can have both a left and right sidekick. These are special weapons that fly alongside your ship.
+HELPTEXT_17              :AThey range from just a simple cannon to the awesome "Atom" bomb. Some are much more powerful than others. Many have limited ammo, but they will recharge slowly during a level!
+HELPTEXT_18              :ATHIS STRING IS NOT USED
+HELPTEXT_19              :A~Done~ This selection allows you to return to the Main Menu. Click on it when you're ready to fly!
+HELPTEXT_20              :A~Options Menu~ From this menu you may configure your joystick or keyboard, and load and save your games.
+HELPTEXT_21              :A~Save Game~ The game you have in progress is automatically saved when you finish the level. So if you forget to save your game, just load "Last Level" and the last level you played will be loaded.
+HELPTEXT_22              :ATo save a game select "save game" from the Options menu, find an empty slot, press the Enter key or spacebar, and enter the name of your choice.
+HELPTEXT_23              :A~Load Game~ To load a game, follow the same procedure except all you need to do is highlight the name of the game you wish to load and press Enter or hit the spacebar.
+HELPTEXT_24              :A~Keyboard~ To configure your keyboard select "Keyboard" from the Options menu. Then, hit the key you wish to use for the function that is highlighted (example: when "up" is highlighted, hit the up arrow on your numeric keypad).
+HELPTEXT_25              :A~Joystick~ To configure your joystick, simply select "Joystick" from the Options menu and follow the on-screen instructions.
+HELPTEXT_26              :A~Volume~ You may also change the volume of the music or the sound in the game by highlighting either "Music" or "Sound" in the Options menu and using the left and right arrow keys to change the volume.
+HELPTEXT_27              :A~Quit Game~ Select this to quit your game. You will be returned to the title screen. Use Alt-X for a quick way to quit the game.
+HELPTEXT_28              :ATo exit the game from the title screen simply select "Quit Game" again and press Enter or the spacebar.
+HELPTEXT_29              :ASelect Ordering Info from Main Menu to find out how to order or dial 1-800-972-7434 to order directly from Epic.
+HELPTEXT_30              :A~Power Bar~  Current power available. Your weapons and shields draw power from here.
+HELPTEXT_31              :A~Weapons~  The two bars show your weapon power for both front and rear weapons.
+HELPTEXT_32              :A~Weapon Mode~  Some rear weapons can have their firing pattern changed with the keyboard command ~change fire~ or a joystick button assigned to ~Change rear weapon~.
+HELPTEXT_33              :A~Sidekicks~  You can have up to two side weapons, usually fired with separate buttons. The number of shots left are shown under the weapon name.
+HELPTEXT_34              :A~Shield/Armor~  These bars show how much damage you can take. Shields will recharge with time from your ~power bar~ and a repair ship may appear if your armor is low - shoot it!
+HELPTEXT_35              :A~Side-Panel~ Top: Player 1 Bottom: Player 2
+HELPTEXT_36              :A~Weapon Power~  This shows the level of power for each player's main weapon.
+HELPTEXT_37              :A~Linking~  Move both ships together to combine them. Player 1 disengages by holding down a sidekick firing button and moving up. Player 2 disengages by moving without firing the main gun.
+HELPTEXT_38              :A~Rotation Cannon~  Player 2 can aim the cannon by holding down the fire button and moving in any direction.
+
+# Planet Names
+PLANETNAME_0             :ATyrian
+PLANETNAME_1             :AAsteroid 1
+PLANETNAME_2             :AAsteroid 2
+PLANETNAME_3             :AAsteroid 3
+PLANETNAME_4             :ASoh Jin
+PLANETNAME_5             :ACamanis
+PLANETNAME_6             :AGryphon
+PLANETNAME_7             :ASavara
+PLANETNAME_8             :AGyges
+PLANETNAME_9             :ADeliani
+PLANETNAME_10            :AIxmucane
+PLANETNAME_11            :ATorm
+PLANETNAME_12            :AUnknown
+PLANETNAME_13            :AUnknown
+PLANETNAME_14            :ABonus
+PLANETNAME_15            :AFleet
+PLANETNAME_16            :ABotany A
+PLANETNAME_17            :ABotany B
+PLANETNAME_18            :AAstCity
+PLANETNAME_19            :AGauntlet
+PLANETNAME_20            :ASkip It
+
+# miscText
+LAST_LVL_COMPLETED       :ALast Level Completed
+SAVE_NAME_               :A~Save name: ~
+EMPTY_SLOT               :AEMPTY SLOT
+CUBES_COLLECTED_         :ACubes collected:
+PRESS_A_KEY              :APress a key
+EXIT_TO_GAME_MENU        :AExit to Game Menu
+PRESS_C_TO_RECALIBRATE   :APress C to recalibrate
+INSERT_COIN              :AINSERT COIN
+JOYSTICK_RECALIBRATED    :AJoystick recalibrated
+OK                       :AOK
+CANCEL                   :ACANCEL
+READ                     :ARead:
+EXIT                     :AEXIT
+DONE                     :ADONE
+NONE                     :ANone
+NO_DATA_AVAILABLE_NOW    :ANo Data is available at this time.
+WARPING_TO_SECRET_LVL    :AWarping to secret level!
+SOUND_OFF                :ASOUND OFF
+SOUND_ON                 :ASOUND ON
+NEW_GAME                 :ANEW GAME
+GOOD_LUCK_               :AGood luck...
+GAME_OVER                :AGAME OVER
+PAUSED                   :APAUSED
+ENTER_BETA_PASSWORD_     :AEnter your beta password:
+PART                     :APART
+PAGE                     :APage
+COMPLETED_               :ACompleted:
+CURRENT_SCORE            :ACurrent Score:
+ARE_YOU_SURE_EXIT        :AAre you sure you want to exit?
+YOU_WILL_QUIT_LVL        :AYou will quit this level.
+YOU_WILL_RET_TO_MAIN_MENU:AYou will be returned to the main menu.
+USE_ARROWS_ENTERS_TO_SEL :AUse arrow keys to select and press Enter.
+PRESS_THE_KEY_FOR_THIS   :APress the key to use for this function.
+EXIT_TO_MAIN_MENU        :AExit to Main Menu
+BETA_TEST_VERSION        :ABeta Test Version
+MUSIC_OFF                :AMUSIC OFF
+MUSIC_ON                 :AMUSIC ON
+YOUR_TOTAL_SCORE_        :AYour total Score:
+ONE_PLAYER_SAVED_GAMES   :AOne Player Saved Games
+TWO_PLAYER_SAVED_GAMES   :ATwo Player Saved Games
+PLAYER_1_SCORE_          :APlayer 1 Score:
+PLAYER_2_SCORE_          :APlayer 2 Score:
+PLAYER_1_GOT             :APlayer 1 got
+PLAYER_2_GOT             :APlayer 2 got
+FRONT_WEAPON_PWRUP       :AFront Weapon Power-Up
+REAR_WEAPON_PWRUP        :ARear Weapon Power-Up
+ONE_PLAYER               :AOne Player
+TWO_PLAYER               :ATwo Player
+PLAYER_1                 :APlayer 1
+PLAYER_2                 :APlayer 2
+HIGH_SCORES              :AHigh Scores
+CONGRATULATIONS          :ACongratulations!
+YOU_EARNED_HIGHSCORE     :AYou have earned a high score!
+ENTER_YOUR_NAME_         :AEnter your name:
+LEVELS_IN_EPISODES       :ALevels in Episode 1:17 2:12 3:12 4:20
+ARROWS_SELECT_1_2_PLAYER :A~Left~ or ~right~ for 1 or 2 player game.
+ARROWS_SELECT_EPISODE    :A~Left~ or ~right~ to select episode.
+PLAYER_1_EARNED_HIGHSCORE:APlayer 1 has earned a high score!
+PLAYER_2_EARNED_HIGHSCORE:APlayer 2 has earned a high score!
+SECRET_LEVEL             :ASecret Level!
+_GAME_SAVED_             :A* Game Saved *
+EXITING_                 :AExiting:
+DESTRUCTION_             :ADestruction:
+YOU_GOT_THE              :AYou got the
+PRESS_F1_FOR_HELP        :APress F1 for help.
+F10_TOGGLE_LEFT_CPU_HUMAN:AF10 toggles left CPU/Human player.
+TIME_REMAINING           :ATIME REMAINING
+_BONUS_GAME_             :A>> Bonus Game <<
+
+# miscTextB
+EP                       :AEp
+EPISODE                  :AEpisode
+LAST_LEVEL               :ALast Level
+GOT                      :Agot
+SUPER                    :ASUPER
+
+# Menu Titles
+MENUTITLE_DATA           :AData
+MENUTITLE_LOAD           :ALoad
+MENUTITLE_SAVE           :ASave
+
+# Joystick Menu
+MENUTITLE_JOYSTICK       :AJOYSTICK
+JOYSTICK                 :AJOYSTICK
+ANALOG_AXES              :AANALOG AXES
+_SENSITIVITY             :A SENSITIVITY
+_THRESHOLD               :A THRESHOLD
+KEY_MENU                 :AMENU
+KEY_PAUSE                :APAUSE
+
+# menuInt[1] 1 Player Full Game Menu
+1PFMENU_GAME_MENU        :AGame Menu
+1PFMENU_DATA             :AData
+1PFMENU_SHIP_SPECS       :AShip Specs
+1PFMENU_UPGRADE_SHIP     :AUpgrade Ship
+1PFMENU_OPTIONS          :AOptions
+1PFMENU_PLAY_NEXT_LVL    :APlay Next Level
+1PFMENU_QUIT             :AQuit Game
+
+# menuInt[2] Upgrade Ship Menu
+UPGMENU_UPGRADE_SHIP     :AUpgrade Ship
+UPGMENU_SHIP_TYPE        :AShip Type
+UPGMENU_FRONT_GUN        :AFront Gun
+UPGMENU_REAR_GUN         :ARear Gun
+UPGMENU_SHIELD           :AShield
+UPGMENU_GENERATOR        :AGenerator
+UPGMENU_LEFT_SIDEKICK    :ALeft Sidekick
+UPGMENU_RIGHT_SIDEKICK   :ARight Sidekick
+UPGMENU_DONE             :ADone
+
+# menuInt[3] Options Menu
+OPTMENU_OPTIONS          :AOptions
+OPTMENU_LOAD             :ALoad
+OPTMENU_SAVE             :ASave
+OPTMENU_MUSIC            :AMusic
+OPTMENU_SOUND            :ASound
+OPTMENU_JOYSTICK         :AJoystick
+OPTMENU_KEYBOARD         :AKeyboard
+OPTMENU_DONE             :ADone
+
+# Keyboard Config Menu
+KEY_CONFIG               :AKEY CONFIG
+KEY_UP                   :AUP
+KEY_DOWN                 :ADOWN
+KEY_LEFT                 :ALEFT
+KEY_RIGHT                :ARIGHT
+KEY_FIRE                 :AFIRE
+KEY_CHANGEFIRE           :ACHANGE FIRE
+KEY_LEFTSIDEKICK         :ALEFT SIDEKICK
+KEY_RIGHTSIDEKICK        :ARIGHT SIDEKICK
+KEY_RESET_TO_DEFAULT     :AReset to Defaults
+KEY_DONE                 :ADone
+
+# menuInt[10] 2 Player Game Menu
+2PMENU_GAME_MENU         :AGame Menu
+2PMENU_PLAY_NEXT_LVL     :APlay Next Level
+2PMENU_PLAYER_1_INPUT    :APlayer 1 Input
+2PMENU_PLAYER_2_INPUT    :APlayer 2 Input
+2PMENU_OPTIONS           :AOptions
+2PMENU_QUIT_GAME         :AQuit Game
+
+# menuInt[11] 1 Player Arcade & Network Menu
+1PAMENU_GAME_MENU        :AGame Menu
+1PAMENU_PLAY_NEXT_LVL    :APlay Next Level
+1PAMENU_OPTIONS          :AOptions
+1PAMENU_QUIT_GAME        :AQuit Game
+
+# menuInt[12] Limited Options Menu (no load / save)
+OPTMENU1_OPTIONS         :AOptions
+OPTMENU1_JOYSTICK        :AJoystick
+OPTMENU1_KEYBOARD        :AKeyboard
+OPTMENU1_MUSIC           :AMusic
+OPTMENU1_SOUND           :ASound
+OPTMENU1_DONE            :ADone
+
+# menuInt[14] Super Tyrian (Engage) Menu
+SUPERMENU_GAME_MENU      :AGame Menu
+SUPERMENU_PLAY_NEXT_LVL  :APlay Next Level
+SUPERMENU_SHIP_SPECS     :AShip Specs
+SUPERMENU_OPTIONS        :AOptions
+SUPERMENU_QUIT_GAME      :AQuit Game
+
+# Level Event Warning Texts / Sounds
+LVLEVENT_WARNING_0       :AEnemy approaching from behind.
+LVLEVENT_WARNING_1       :ALarge mass detected ahead!
+LVLEVENT_WARNING_2       :AIntercepting enemy aircraft.
+LVLEVENT_WARNING_3       :ACleared enemy platforms.
+LVLEVENT_WARNING_4       :AApproaching enemy platforms...
+LVLEVENT_WARNING_5       :A~WARNING:~ Spikes ahead!!
+LVLEVENT_WARNING_6       :AAfterburners activated!
+LVLEVENT_WARNING_7       :A** Danger! **
+LVLEVENT_WARNING_8       :A>>> Bonus Level <<<
+
+# Help Menu
+HELPMENU_HELP_MENU       :AHelp Menu
+HELPMENU_1P_GAME_MENU    :AOne-Player Game Menu
+HELPMENU_2P_GAME_MENU    :ATwo-Player Game Menu
+HELPMENU_UPGRADE_SHIP    :AUpgrade Ship
+HELPMENU_OPTIONS         :AOptions
+HELPMENU_EXIT_HELP       :AEXIT HELP
+
+# Menu Hints / Tooltips
+MENU_HINT_0              :ACommunications : Read incoming messages
+MENU_HINT_1              :APurchase new weapons and ship components.
+MENU_HINT_2              :AConfiguration and Load/Save game
+MENU_HINT_3              :AJourney onward to another level.
+MENU_HINT_4              :AQuit the game.
+MENU_HINT_5              :AEach ship has a different armor rating.
+MENU_HINT_6              :AChange and upgrade your forward weapon.
+MENU_HINT_7              :AChange and upgrade your rear/side weapon.
+MENU_HINT_8              :AShields are your first line of defense.
+MENU_HINT_9              :AGenerators power your weapons and shields.
+MENU_HINT_10             :ATake a chance : Purchase a special weapon.
+MENU_HINT_11             :AReturn to the previous menu.
+MENU_HINT_12             :ALoad a saved game. (Shortcut is ALT-L)
+MENU_HINT_13             :ASave your game for later. (Shortcut is ALT-S)
+MENU_HINT_14             :AChange volume with the left/right arrow keys.
+MENU_HINT_15             :AConfigure your Joystick buttons.
+MENU_HINT_16             :AChange the keys used to play the game.
+MENU_HINT_17             :ASelect this location to visit next.
+MENU_HINT_18             :ASelect the item you want.
+MENU_HINT_19             :APress ENTER to change this key.
+MENU_HINT_20             :APress up or down to select the save slot you want.
+MENU_HINT_21             :APress up or down to select the cube you want to read.
+MENU_HINT_22             :APress ESC to exit.
+MENU_HINT_23             :ASelect a weapon. Left/right arrow keys to change power level.
+MENU_HINT_24             :AReset all key selections to the original settings.
+MENU_HINT_25             :AContinue playing the level.
+MENU_HINT_26             :AQuit playing the level.
+MENU_HINT_27             :AChange detail level with the left/right arrow keys.
+MENU_HINT_28             :AChange game speed with the left/right arrow keys.
+MENU_HINT_29             :AUse the arrow keys to select the interface device to use.
+MENU_HINT_30             :AChange the function with the left/right arrow keys.
+MENU_HINT_31             :ASelect this if the position mark is not in the center rectangle.
+MENU_HINT_32             :ALeave the joystick in the center position and push a button.
+MENU_HINT_33             :AAccess schematics and detailed info on your ship.
+
+# In Game Menu
+INGAMEMENU_MUSIC_VOL     :AMusic Volume
+INGAMEMENU_SOUND_VOL     :ASound Volume
+INGAMEMENU_DETAIL_LVL    :ADetail Level
+INGAMEMENU_GAME_SPEED    :AGame Speed
+INGAMEMENU_RETURN_TO_GAME:AReturn to Game
+INGAMEMENU_QUIT_LVL      :AQuit Level
+
+# Other Miscellanous Strings
+EMPTY_SAVE_SLOT_LINE    :A-----
 
 # Datacubes
-# Body uses "|" as linebreaks and "~" to ~highlight words~.
-DATACUBE_1_1_TITLE      :~TYRIAN~ DATAFLUX 040-54-871
-DATACUBE_1_1_HEADER     :Data
-DATACUBE_1_1_BODY       :After gathering all the available data, I think I've found the safest course into Tyrian orbit from my landing platform...|After heading due west out of the Fauchi mines you should come in contact with the floating battle platforms. Watch for the auto targeting plasma turrets and especially the ~construction~ ~claws~. |Whoever designed these platforms sure counted on spies and infiltrators, as they're loaded with small squadrons of surface ~attack~ ~drones~ as well. |I think these platforms are filled with ~Gravitic Ore~, which would explain why they're floating. No wonder ~Microsol~ wants to mine them so badly. I just hope I don't get intercepted before I reach orbit.
+# Body uses "|" as linebreaks and "~" to ~highlight~ words.
+DATACUBE_1_1_TITLE      :A~TYRIAN~ DATAFLUX 040-54-871
+DATACUBE_1_1_HEADER     :AData
+DATACUBE_1_1_BODY       :AAfter gathering all the available data, I think I've found the safest course into Tyrian orbit from my landing platform...|After heading due west out of the Fauchi mines you should come in contact with the floating battle platforms. Watch for the auto targeting plasma turrets and especially the ~construction~ ~claws~. |Whoever designed these platforms sure counted on spies and infiltrators, as they're loaded with small squadrons of surface ~attack~ ~drones~ as well. |I think these platforms are filled with ~Gravitic Ore~, which would explain why they're floating. No wonder ~Microsol~ wants to mine them so badly. I just hope I don't get intercepted before I reach orbit.

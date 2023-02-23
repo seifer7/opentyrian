@@ -418,10 +418,10 @@ static bool helpSystemPage(Uint8 *topic, bool *restart)
 		// Draw footer.
 		JE_char buffer[128];
 
-		snprintf(buffer, sizeof buffer, "%s %d", miscText[24], page - topicStart[*topic - 1] + 1);
+		snprintf(buffer, sizeof buffer, "%s %d", _("PART"), page - topicStart[*topic - 1] + 1);
 		draw_font_hv(VGAScreen, 10, 192, buffer, small_font, left_aligned, 13, 5);
 
-		snprintf(buffer, sizeof buffer, "%s %d of %d", miscText[25], page, MAX_PAGE);
+		snprintf(buffer, sizeof buffer, "%s %d of %d", _("PAGE"), page, MAX_PAGE);
 		draw_font_hv(VGAScreen, 320 - 10, 192, buffer, small_font, right_aligned, 13, 5);
 
 		// Draw text.
@@ -663,7 +663,7 @@ bool JE_loadScreen(void)
 		memcpy(VGAScreen->pixels, VGAScreen2->pixels, (size_t)VGAScreen->pitch * VGAScreen->h);
 
 		// Draw header.
-		draw_font_hv_shadow(VGAScreen, xCenter, yMenuHeader, miscText[38 + playersIndex], large_font, centered, 15, -3, false, 2);
+		draw_font_hv_shadow(VGAScreen, xCenter, yMenuHeader, (playersIndex == 0 ? _("ONE_PLAYER_SAVED_GAMES") : _("TWO_PLAYER_SAVED_GAMES")), large_font, centered, 15, -3, false, 2);
 
 		// Draw menu items.
 
@@ -675,7 +675,7 @@ bool JE_loadScreen(void)
 
 			if (i == menuItemsCount - 1)
 			{
-				JE_textShade(VGAScreen, xMenuItemName, y, miscText[33], 13, selected ? 6 : 2, FULL_SHADE);
+				JE_textShade(VGAScreen, xMenuItemName, y, _("EXIT_TO_MAIN_MENU"), 13, selected ? 6 : 2, FULL_SHADE);
 				continue;
 			}
 
@@ -687,19 +687,19 @@ bool JE_loadScreen(void)
 
 			if (disabled)
 			{
-				JE_textShade(VGAScreen, xMenuItemName, y, miscText[2], 13, selected ? 6 : 0, FULL_SHADE);
+				JE_textShade(VGAScreen, xMenuItemName, y, _("EMPTY_SLOT"), 13, selected ? 6 : 0, FULL_SHADE);
 
-				snprintf(buffer, sizeof buffer, "%s -----", miscTextB[2]);
+				snprintf(buffer, sizeof buffer, "%s -----", _("LAST_LEVEL"));
 				JE_textShade(VGAScreen, xMenuItemLastLevel, y, buffer, 5, selected ? 6 : 0, FULL_SHADE);
 			}
 			else
 			{
-				JE_textShade(VGAScreen, xMenuItemName, y, saveFile->name, 13, selected ? 6 : 2, FULL_SHADE);
+				JE_textShade(VGAScreen, xMenuItemName, y, (i < 10 ? saveFile->name : _("LAST_LEVEL")), 13, selected ? 6 : 2, FULL_SHADE);
 
-				snprintf(buffer, sizeof buffer, "%s %s", miscTextB[2], saveFile->levelName);
+				snprintf(buffer, sizeof buffer, "%s %s", _("LAST_LEVEL"), saveFile->levelName);
 				JE_textShade(VGAScreen, xMenuItemLastLevel, y, buffer, 5, selected ? 6 : 2, FULL_SHADE);
 
-				snprintf(buffer, sizeof buffer, "%s %u", miscTextB[1], saveFile->episode);
+				snprintf(buffer, sizeof buffer, "%s %u", _("EPISODE"), saveFile->episode);
 				JE_textShade(VGAScreen, xMenuItemEpisode, y, buffer, 5, selected ? 6 : 2, FULL_SHADE);
 			}
 		}
@@ -716,7 +716,7 @@ bool JE_loadScreen(void)
 			blit_sprite2x2(VGAScreen, xRightControl, yControls, shopSpriteSheet, 281);
 
 		helpBoxColor = 15;
-		JE_helpBox(VGAScreen, 103, 182, miscText[55], 25);
+		JE_helpBox(VGAScreen, 103, 182, _("ARROWS_SELECT_1_2_PLAYER"), 25);
 
 		if (restart)
 		{
@@ -1020,8 +1020,8 @@ void JE_nextEpisode(void)
 	JE_clr256(VGAScreen);
 	memcpy(colors, palettes[6-1], sizeof(colors));
 
-	JE_dString(VGAScreen, JE_fontCenter(_n("EPISODE_",episodeNum), SMALL_FONT_SHAPES), 130, _n("EPISODE_", episodeNum), SMALL_FONT_SHAPES);
-	JE_dString(VGAScreen, JE_fontCenter(miscText[5-1], SMALL_FONT_SHAPES), 185, miscText[5-1], SMALL_FONT_SHAPES);
+	JE_dString(VGAScreen, JE_fontCenter(_n("EPISODE_%d",episodeNum), SMALL_FONT_SHAPES), 130, _n("EPISODE_%d", episodeNum), SMALL_FONT_SHAPES);
+	JE_dString(VGAScreen, JE_fontCenter(_("PRESS_A_KEY"), SMALL_FONT_SHAPES), 185, _("PRESS_A_KEY"), SMALL_FONT_SHAPES);
 
 	JE_showVGA();
 	fade_palette(colors, 15, 0, 255);
@@ -1086,7 +1086,7 @@ void JE_initPlayerData(void)
 	mainLevel = FIRST_LEVEL;
 	saveLevel = FIRST_LEVEL;
 
-	strcpy(lastLevelName, miscText[19]);
+	strcpy(lastLevelName, _("NEW_GAME"));
 }
 
 void JE_sortHighScores(void)
@@ -1128,7 +1128,7 @@ void JE_highScoreScreen(void)
 			fill_rectangle_wh(VGAScreen2, 0, 192, 320, 8, 0);
 
 			// Draw header.
-			draw_font_hv_shadow(VGAScreen2, xCenter, yMenuHeader, miscText[50], large_font, centered, 15, -3, false, 2);
+			draw_font_hv_shadow(VGAScreen2, xCenter, yMenuHeader, _("HIGH_SCORES"), large_font, centered, 15, -3, false, 2);
 		}
 
 		// Restore background and header.
@@ -1137,13 +1137,13 @@ void JE_highScoreScreen(void)
 		const bool disabled = !episodeAvail[episodeIndex];
 
 		// Draw episode header.
-		draw_font_hv_shadow(VGAScreen, xCenter, yEpisodeHeader, _n("EPISODE_", episodeIndex + 1), normal_font, centered, 15, -3 + (disabled ? -4 : 0), false, 2);
+		draw_font_hv_shadow(VGAScreen, xCenter, yEpisodeHeader, _n("EPISODE_%d", episodeIndex + 1), normal_font, centered, 15, -3 + (disabled ? -4 : 0), false, 2);
 
 		char buffer[29];
 
 		// Draw 1-player scores.
 
-		draw_font_hv_shadow(VGAScreen, xCenter, 55, miscText[46], normal_font, centered, 15, -3, false, 2);
+		draw_font_hv_shadow(VGAScreen, xCenter, 55, _("ONE_PLAYER"), normal_font, centered, 15, -3, false, 2);
 
 		for (Uint8 i = 0; i < 3; ++i)
 		{
@@ -1160,7 +1160,7 @@ void JE_highScoreScreen(void)
 
 		// Draw 2-player scores.
 
-		draw_font_hv_shadow(VGAScreen, xCenter, 120, miscText[47], normal_font, centered, 15, -3, false, 2);
+		draw_font_hv_shadow(VGAScreen, xCenter, 120, _("TWO_PLAYER"), normal_font, centered, 15, -3, false, 2);
 
 		for (Uint8 i = 0; i < 3; ++i)
 		{
@@ -1187,7 +1187,7 @@ void JE_highScoreScreen(void)
 			blit_sprite2x2(VGAScreen, xRightControl, yControls, shopSpriteSheet, 281);
 
 		helpBoxColor = 15;
-		JE_helpBox(VGAScreen, 103, 182, miscText[56], 25);
+		JE_helpBox(VGAScreen, 103, 182, _("ARROWS_SELECT_EPISODE"), 25);
 
 		if (restart)
 		{
@@ -1957,7 +1957,7 @@ void JE_inGameHelp(void)
 
 	// "press a key"
 	blit_sprite(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game text area
-	JE_outText(VGAScreenSeg, 120 - JE_textWidth(miscText[5-1], TINY_FONT) / 2 + 20, 190, miscText[5-1], 0, 4);
+	JE_outText(VGAScreenSeg, 120 - JE_textWidth(_("PRESS_A_KEY"), TINY_FONT) / 2 + 20, 190, _("PRESS_A_KEY"), 0, 4);
 
 	do
 	{
@@ -2053,25 +2053,25 @@ void JE_highScoreCheck(void)
 				{
 					service_SDL_events(true);
 
-					JE_dString(VGAScreen, JE_fontCenter(miscText[51], FONT_SHAPES), 3, miscText[51], FONT_SHAPES);
+					JE_dString(VGAScreen, JE_fontCenter(_("CONGRATULATIONS"), FONT_SHAPES), 3, _("CONGRATULATIONS"), FONT_SHAPES);
 
 					temp3 = twoPlayerMode ? 58 + p : 53;
 
-					JE_dString(VGAScreen, JE_fontCenter(miscText[temp3-1], SMALL_FONT_SHAPES), 30, miscText[temp3-1], SMALL_FONT_SHAPES);
+					JE_dString(VGAScreen, JE_fontCenter((!twoPlayerMode ? _("ENTER_YOUR_NAME_") : (p == 0 ? _("PLAYER_1_EARNED_HIGHSCORE") : _("PLAYER_2_EARNED_HIGHSCORE"))), SMALL_FONT_SHAPES), 30, (!twoPlayerMode ? _("ENTER_YOUR_NAME_") : (p == 0 ? _("PLAYER_1_EARNED_HIGHSCORE") : _("PLAYER_2_EARNED_HIGHSCORE"))), SMALL_FONT_SHAPES);
 
 					blit_sprite(VGAScreenSeg, 50, 50, OPTION_SHAPES, 35);  // message box
 
 					if (twoPlayerMode)
 					{
-						sprintf(buffer, "%s %s", miscText[48 + p], miscText[53]);
+						sprintf(buffer, "%s %s", (p == 0 ? _("PLAYER_1") : _("PLAYER_2")), _("ENTER_YOUR_NAME_"));
 						JE_textShade(VGAScreen, 60, 55, buffer, 11, 4, FULL_SHADE);
 					}
 					else
 					{
-						JE_textShade(VGAScreen, 60, 55, miscText[53], 11, 4, FULL_SHADE);
+						JE_textShade(VGAScreen, 60, 55, _("ENTER_YOUR_NAME_"), 11, 4, FULL_SHADE);
 					}
 
-					sprintf(buffer, "%s %d", miscText[37], temp_score);
+					sprintf(buffer, "%s %d", _("YOUR_TOTAL_SCORE_"), temp_score);
 					JE_textShade(VGAScreen, 70, 70, buffer, 11, 4, FULL_SHADE);
 
 					do
@@ -2171,8 +2171,8 @@ void JE_highScoreCheck(void)
 				fade_black(15);
 				JE_loadPic(VGAScreen, 2, false);
 
-				JE_dString(VGAScreen, JE_fontCenter(miscText[50], FONT_SHAPES), 10, miscText[50], FONT_SHAPES);
-				JE_dString(VGAScreen, JE_fontCenter(_n("EPISODE_", episodeNum), SMALL_FONT_SHAPES), 35, _n("EPISODE_", episodeNum), SMALL_FONT_SHAPES);
+				JE_dString(VGAScreen, JE_fontCenter(_("HIGH_SCORES"), FONT_SHAPES), 10, _("HIGH_SCORES"), FONT_SHAPES);
+				JE_dString(VGAScreen, JE_fontCenter(_n("EPISODE_%d", episodeNum), SMALL_FONT_SHAPES), 35, _n("EPISODE_%d", episodeNum), SMALL_FONT_SHAPES);
 
 				for (int i = first_slot; i < slot_limit; ++i)
 				{
@@ -2198,7 +2198,7 @@ void JE_highScoreCheck(void)
 				textGlowBrightness = 10;
 				JE_outTextGlow(VGAScreenSeg, 150, (slot - first_slot + 1) * 12 + 65, saveFiles[slot].highScoreName);
 				textGlowBrightness = 10;
-				JE_outTextGlow(VGAScreenSeg, JE_fontCenter(miscText[4], TINY_FONT), 180, miscText[4]);
+				JE_outTextGlow(VGAScreenSeg, JE_fontCenter(_("PRESS_A_KEY"), TINY_FONT), 180, _("PRESS_A_KEY"));
 
 				JE_showVGA();
 
@@ -2638,7 +2638,7 @@ void JE_playCredits(void)
 		fill_rectangle_xy(VGAScreen, 0, 190, 319, 199, 0);
 
 		if (currentpic == sprite_table[EXTRA_SHAPES].count - 1)
-			JE_outTextAdjust(VGAScreen, 5, 180, miscText[54], 2, -2, SMALL_FONT_SHAPES, false);  // levels-in-episode
+			JE_outTextAdjust(VGAScreen, 5, 180, _("LEVELS_IN_EPISODES"), 2, -2, SMALL_FONT_SHAPES, false);  // levels-in-episode
 
 		if (bottom_line == lines_max - 8)
 			fade_song();
@@ -2711,16 +2711,16 @@ void JE_endLevelAni(void)
 
 	if (bonusLevel)
 	{
-		JE_outTextGlow(VGAScreenSeg, 20, 20, miscText[17-1]);
+		JE_outTextGlow(VGAScreenSeg, 20, 20, _("WARPING_TO_SECRET_LVL"));
 	}
 	else if (all_players_alive())
 	{
-		sprintf(tempStr, "%s %s", miscText[27-1], levelName); // "Completed"
+		sprintf(tempStr, "%s %s", _("COMPLETED_"), levelName); // "Completed"
 		JE_outTextGlow(VGAScreenSeg, 20, 20, tempStr);
 	}
 	else
 	{
-		sprintf(tempStr, "%s %s", miscText[62-1], levelName); // "Exiting"
+		sprintf(tempStr, "%s %s", _("EXITING_"), levelName); // "Exiting"
 		JE_outTextGlow(VGAScreenSeg, 20, 20, tempStr);
 	}
 
@@ -2728,18 +2728,18 @@ void JE_endLevelAni(void)
 	{
 		for (uint i = 0; i < 2; ++i)
 		{
-			snprintf(tempStr, sizeof(tempStr), "%s %lu", miscText[40 + i], player[i].cash);
+			snprintf(tempStr, sizeof(tempStr), "%s %lu", (i == 0 ? _("PLAYER_1_SCORE_") : _("PLAYER_2_SCORE_")), player[i].cash);
 			JE_outTextGlow(VGAScreenSeg, 30, 50 + 20 * i, tempStr);
 		}
 	}
 	else
 	{
-		sprintf(tempStr, "%s %lu", miscText[28-1], player[0].cash);
+		sprintf(tempStr, "%s %lu", _("CURRENT_SCORE"), player[0].cash);
 		JE_outTextGlow(VGAScreenSeg, 30, 50, tempStr);
 	}
 
 	temp = (totalEnemy == 0) ? 0 : roundf(enemyKilled * 100 / totalEnemy);
-	sprintf(tempStr, "%s %d%%", miscText[63-1], temp);
+	sprintf(tempStr, "%s %d%%", _("DESTRUCTION_"), temp);
 	JE_outTextGlow(VGAScreenSeg, 40, 90, tempStr);
 
 	if (!constantPlay)
@@ -2747,7 +2747,7 @@ void JE_endLevelAni(void)
 
 	if (!onePlayerAction && !twoPlayerMode)
 	{
-		JE_outTextGlow(VGAScreenSeg, 30, 120, miscText[4-1]);   /*Cubes*/
+		JE_outTextGlow(VGAScreenSeg, 30, 120, _("CUBES_COLLECTED_"));   /*Cubes*/
 
 		if (cubeMax > 0)
 		{
@@ -2797,7 +2797,7 @@ void JE_endLevelAni(void)
 		}
 		else
 		{
-			JE_outTextGlow(VGAScreenSeg, 50, 135, miscText[15-1]);
+			JE_outTextGlow(VGAScreenSeg, 50, 135, _("NONE"));
 		}
 
 	}
@@ -2812,7 +2812,7 @@ void JE_endLevelAni(void)
 		temp = 0;
 	}
 	temp2 = twoPlayerMode ? 150 : 160;
-	JE_outTextGlow(VGAScreenSeg, 90, temp2, miscText[5-1]);
+	JE_outTextGlow(VGAScreenSeg, 90, temp2, _("PRESS_A_KEY"));
 
 	if (!constantPlay)
 	{
@@ -2902,7 +2902,7 @@ void JE_operation(JE_byte slot)
 
 			blit_sprite(VGAScreen, 50, 50, OPTION_SHAPES, 35);  // message box
 
-			JE_textShade(VGAScreen, 60, 55, miscText[1-1], 11, 4, DARKEN);
+			JE_textShade(VGAScreen, 60, 55, _("LAST_LVL_COMPLETED"), 11, 4, DARKEN);
 			JE_textShade(VGAScreen, 70, 70, levelName, 11, 4, DARKEN);
 
 			do
@@ -2910,18 +2910,18 @@ void JE_operation(JE_byte slot)
 				flash = (flash == 8 * 16 + 10) ? 8 * 16 + 2 : 8 * 16 + 10;
 				temp3 = (temp3 == 6) ? 2 : 6;
 
-				strcpy(tempStr, miscText[2-1]);
+				strcpy(tempStr, _("SAVE_NAME_"));
 				strncat(tempStr, stemp, temp);
 				JE_outText(VGAScreen, 65, 89, tempStr, 8, 3);
 				tempW = 65 + JE_textWidth(tempStr, TINY_FONT);
 				JE_barShade(VGAScreen, tempW + 2, 90, tempW + 6, 95);
 				fill_rectangle_xy(VGAScreen, tempW + 1, 89, tempW + 5, 94, flash);
 
-				int text_x = 54 + 45 - (JE_textWidth(miscText[9], FONT_SHAPES) / 2);
-				JE_outTextAdjust(VGAScreen, text_x, 128, miscText[9], 15, -5, FONT_SHAPES, true);
+				int text_x = 54 + 45 - (JE_textWidth(_("OK"), FONT_SHAPES) / 2);
+				JE_outTextAdjust(VGAScreen, text_x, 128, _("OK"), 15, -5, FONT_SHAPES, true);
 
-				text_x = 149 + 45 - (JE_textWidth(miscText[10], FONT_SHAPES) / 2);
-				JE_outTextAdjust(VGAScreen, text_x, 128, miscText[10], 15, -5, FONT_SHAPES, true);
+				text_x = 149 + 45 - (JE_textWidth(_("CANCEL"), FONT_SHAPES) / 2);
+				JE_outTextAdjust(VGAScreen, text_x, 128, _("CANCEL"), 15, -5, FONT_SHAPES, true);
 
 				for (int i = 0; i < 14; i++)
 				{
@@ -3041,7 +3041,7 @@ void JE_inGameDisplays(void)
 				}
 			}
 
-			strcpy(stemp, (temp == 0) ? miscText[49-1] : miscText[50-1]);
+			strcpy(stemp, (temp == 0) ? _("PLAYER_1"): _("PLAYER_2"));
 			if (isNetworkGame)
 			{
 				strcpy(stemp, JE_getName(temp+1));
@@ -3212,7 +3212,7 @@ void JE_mainKeyboardInput(void)
 				player[i].armor = 0;
 
 			youAreCheating = !youAreCheating;
-			JE_drawTextWindow(miscText[63-1]);
+			JE_drawTextWindow(_("DESTRUCTION_"));
 		}
 
 		if (constantPlay && keysactive[SDL_SCANCODE_C])
@@ -3327,7 +3327,7 @@ void JE_pauseGame(void)
 	//tempScreenSeg = VGAScreenSeg; // sega000
 	if (!superPause)
 	{
-		JE_dString(VGAScreenSeg, 120, 90, miscText[22], FONT_SHAPES);
+		JE_dString(VGAScreenSeg, 120, 90, _("PAUSED"), FONT_SHAPES);
 
 		VGAScreen = VGAScreenSeg;
 		JE_showVGA();
@@ -3931,7 +3931,7 @@ redo:
 	}
 
 	if (play_demo)
-		JE_dString(VGAScreen, 115, 10, miscText[7], SMALL_FONT_SHAPES); // insert coin
+		JE_dString(VGAScreen, 115, 10, _("INSERT_COIN"), SMALL_FONT_SHAPES); // insert coin
 
 	if (this_player->is_alive && !endLevel)
 	{
@@ -4649,7 +4649,7 @@ const char *JE_getName(JE_byte pnum)
 	else if (network_opponent_name[0] != '\0')
 		return network_opponent_name;
 
-	return miscText[47 + pnum];
+	return pnum == 1 ? _("PLAYER_1") : _("PLAYER_2");
 }
 
 void JE_playerCollide(Player *this_player, JE_byte playerNum_)
@@ -4725,11 +4725,11 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							shotRepeat[SHOT_SPECIAL2] = 0;
 
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(1), miscTextB[4-1], special[evalue - 32100].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), special[evalue - 32100].name);
 							else if (twoPlayerMode)
-								sprintf(tempStr, "%s %s", miscText[43-1], special[evalue - 32100].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), special[evalue - 32100].name);
 							else
-								sprintf(tempStr, "%s %s", miscText[64-1], special[evalue - 32100].name);
+								sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), special[evalue - 32100].name);
 							JE_drawTextWindow(tempStr);
 							soundQueue[7] = S_POWERUP;
 							enemyAvail[z] = 1;
@@ -4741,9 +4741,9 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						{
 							enemyAvail[z] = 1;
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(2), miscTextB[4-1], options[evalue - 32000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), options[evalue - 32000].name);
 							else
-								sprintf(tempStr, "%s %s", miscText[44-1], options[evalue - 32000].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), options[evalue - 32000].name);
 							JE_drawTextWindow(tempStr);
 
 							// if picked up a different sidekick than player already has, then reset sidekicks to least powerful, else power them up
@@ -4769,7 +4769,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						else if (onePlayerAction)
 						{
 							enemyAvail[z] = 1;
-							sprintf(tempStr, "%s %s", miscText[64-1], options[evalue - 32000].name);
+							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), options[evalue - 32000].name);
 							JE_drawTextWindow(tempStr);
 
 							for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i)
@@ -4789,9 +4789,9 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						if (playerNum_ == 2)
 						{
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(2), miscTextB[4-1], weaponPort[evalue - 31000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), weaponPort[evalue - 31000].name);
 							else
-								sprintf(tempStr, "%s %s", miscText[44-1], weaponPort[evalue - 31000].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), weaponPort[evalue - 31000].name);
 							JE_drawTextWindow(tempStr);
 							player[1].items.weapon[REAR_WEAPON].id = evalue - 31000;
 							shotMultiPos[SHOT_REAR] = 0;
@@ -4800,7 +4800,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						}
 						else if (onePlayerAction)
 						{
-							sprintf(tempStr, "%s %s", miscText[64-1], weaponPort[evalue - 31000].name);
+							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), weaponPort[evalue - 31000].name);
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[REAR_WEAPON].id = evalue - 31000;
 							shotMultiPos[SHOT_REAR] = 0;
@@ -4816,9 +4816,9 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						if (playerNum_ == 1 && twoPlayerMode)
 						{
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(1), miscTextB[4-1], weaponPort[evalue - 30000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), weaponPort[evalue - 30000].name);
 							else
-								sprintf(tempStr, "%s %s", miscText[43-1], weaponPort[evalue - 30000].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), weaponPort[evalue - 30000].name);
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
 							shotMultiPos[SHOT_FRONT] = 0;
@@ -4827,7 +4827,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						}
 						else if (onePlayerAction)
 						{
-							sprintf(tempStr, "%s %s", miscText[64-1], weaponPort[evalue - 30000].name);
+							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), weaponPort[evalue - 30000].name);
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
 							shotMultiPos[SHOT_FRONT] = 0;
@@ -4897,11 +4897,11 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 					else if (evalue == -1)  // got front weapon powerup
 					{
 						if (isNetworkGame)
-							sprintf(tempStr, "%s %s %s", JE_getName(1), miscTextB[4-1], miscText[45-1]);
+							sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), _("FRONT_WEAPON_PWRUP"));
 						else if (twoPlayerMode)
-							sprintf(tempStr, "%s %s", miscText[43-1], miscText[45-1]);
+							sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), _("FRONT_WEAPON_PWRUP"));
 						else
-							strcpy(tempStr, miscText[45-1]);
+							strcpy(tempStr, _("FRONT_WEAPON_PWRUP"));
 						JE_drawTextWindow(tempStr);
 
 						power_up_weapon(&player[0], FRONT_WEAPON);
@@ -4910,11 +4910,11 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 					else if (evalue == -2)  // got rear weapon powerup
 					{
 						if (isNetworkGame)
-							sprintf(tempStr, "%s %s %s", JE_getName(2), miscTextB[4-1], miscText[46-1]);
+							sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), _("REAR_WEAPON_PWRUP"));
 						else if (twoPlayerMode)
-							sprintf(tempStr, "%s %s", miscText[44-1], miscText[46-1]);
+							sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), _("REAR_WEAPON_PWRUP"));
 						else
-							strcpy(tempStr, miscText[46-1]);
+							strcpy(tempStr, _("REAR_WEAPON_PWRUP"));
 						JE_drawTextWindow(tempStr);
 
 						power_up_weapon(twoPlayerMode ? &player[1] : &player[0], REAR_WEAPON);
