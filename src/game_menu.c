@@ -540,24 +540,21 @@ void JE_itemScreen(void)
 				switch (curSel[MENU_UPGRADES]-1)
 				{
 					case 1: /* ship */
-						if (temp > 90)
-							snprintf(tempStr, sizeof(tempStr), "Custom Ship %d", temp - 90);
-						else
-							strcpy(tempStr, ships[temp].name);
+						strcpy(tempStr, _n("SHIPNAME_%d", temp));
 						break;
 					case 2: /* front and rear weapon */
 					case 3:
-						strcpy(tempStr, weaponPort[temp].name);
+						strcpy(tempStr, _n("WEAPONPORT_%d", temp));
 						break;
 					case 4: /* shields */
-						strcpy(tempStr, shields[temp].name);
+						strcpy(tempStr, _n("SHIELDNAME_%d", temp));
 						break;
 					case 5: /* generator */
-						strcpy(tempStr, powerSys[temp].name);
+						strcpy(tempStr, _n("GENITEM_%d", temp));
 						break;
 					case 6: /* sidekicks */
 					case 7:
-						strcpy(tempStr, options[temp].name);
+						strcpy(tempStr, _n("SIDEKICK_%d", temp));
 						break;
 				}
 				if (tempW == curSel[curMenu]-1)
@@ -650,9 +647,9 @@ void JE_itemScreen(void)
 				helpBoxBrightness = 1;
 
 				JE_textShade(VGAScreen, 25, 50, superShips[SA+1], 15, 0, FULL_SHADE);
-				JE_helpBox(VGAScreen,   25, 60, weaponPort[player[0].items.weapon[FRONT_WEAPON].id].name, 22);
+				JE_helpBox(VGAScreen,   25, 60, _n("WEAPONPORT_%d", player[0].items.weapon[FRONT_WEAPON].id), 22);
 				JE_textShade(VGAScreen, 25, 120, superShips[SA+2], 15, 0, FULL_SHADE);
-				JE_helpBox(VGAScreen,   25, 130, special[player[0].items.special].name, 22);
+				JE_helpBox(VGAScreen,   25, 130, _n("SPECIALITEM_%d", player[0].items.special), 22);
 			}
 			else
 			{
@@ -2474,21 +2471,21 @@ void JE_genItemMenu(JE_byte itemNum)
 		switch (itemNum)
 		{
 		case 2:
-			strcpy(tempStr, ships[temp].name);
+			strcpy(tempStr, _n("SHIPNAME_%d", temp));
 			break;
 		case 3:
 		case 4:
-			strcpy(tempStr, weaponPort[temp].name);
+			strcpy(tempStr, _n("WEAPONPORT_%d", temp));
 			break;
 		case 5:
-			strcpy(tempStr, shields[temp].name);
+			strcpy(tempStr, _n("SHIELDNAME_%d", temp));
 			break;
 		case 6:
-			strcpy(tempStr, powerSys[temp].name);
+			strcpy(tempStr, _n("GENITEM_%d", temp));
 			break;
 		case 7:
 		case 8:
-			strcpy(tempStr, options[temp].name);
+			strcpy(tempStr, _n("SIDEKICK_%d", temp));
 			break;
 		}
 		if (temp == temp2)
@@ -2983,7 +2980,7 @@ void JE_drawShipSpecs(SDL_Surface * screen, SDL_Surface * temp_screen)
 	JE_rectangle(screen, 1, 1, 318, 198, 35);
 
 	verticalHeight = 9;
-	JE_outText(screen, 10, 2, ships[player[0].items.ship].name, 12, 3);
+	JE_outText(screen, 10, 2, _n("SHIPNAME_%d", player[0].items.ship), 12, 3);
 	JE_helpBox(screen, 100, 20, shipInfo[player[0].items.ship-1][0], 40);
 	JE_helpBox(screen, 100, 100, shipInfo[player[0].items.ship-1][1], 40);
 	verticalHeight = 7;

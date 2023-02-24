@@ -4725,11 +4725,11 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 							shotRepeat[SHOT_SPECIAL2] = 0;
 
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), special[evalue - 32100].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), _n("SPECIALITEM_%d",evalue - 32100));
 							else if (twoPlayerMode)
-								sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), special[evalue - 32100].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), _n("SPECIALITEM_%d", evalue - 32100));
 							else
-								sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), special[evalue - 32100].name);
+								sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), _n("SPECIALITEM_%d", evalue - 32100));
 							JE_drawTextWindow(tempStr);
 							soundQueue[7] = S_POWERUP;
 							enemyAvail[z] = 1;
@@ -4741,9 +4741,9 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						{
 							enemyAvail[z] = 1;
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), options[evalue - 32000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), _n("SIDEKICK_%d", evalue - 32000));
 							else
-								sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), options[evalue - 32000].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), _n("SIDEKICK_%d", evalue - 32000));
 							JE_drawTextWindow(tempStr);
 
 							// if picked up a different sidekick than player already has, then reset sidekicks to least powerful, else power them up
@@ -4769,7 +4769,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						else if (onePlayerAction)
 						{
 							enemyAvail[z] = 1;
-							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), options[evalue - 32000].name);
+							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), _n("SIDEKICK_%d", evalue - 32000));
 							JE_drawTextWindow(tempStr);
 
 							for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i)
@@ -4789,9 +4789,9 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						if (playerNum_ == 2)
 						{
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), weaponPort[evalue - 31000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(2), _("GOT"), _n("WEAPONPORT_%d", evalue - 31000));
 							else
-								sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), weaponPort[evalue - 31000].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_2_GOT"), _n("WEAPONPORT_%d", evalue - 31000));
 							JE_drawTextWindow(tempStr);
 							player[1].items.weapon[REAR_WEAPON].id = evalue - 31000;
 							shotMultiPos[SHOT_REAR] = 0;
@@ -4800,7 +4800,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						}
 						else if (onePlayerAction)
 						{
-							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), weaponPort[evalue - 31000].name);
+							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), _n("WEAPONPORT_%d", evalue - 31000));
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[REAR_WEAPON].id = evalue - 31000;
 							shotMultiPos[SHOT_REAR] = 0;
@@ -4816,9 +4816,9 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						if (playerNum_ == 1 && twoPlayerMode)
 						{
 							if (isNetworkGame)
-								sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), weaponPort[evalue - 30000].name);
+								sprintf(tempStr, "%s %s %s", JE_getName(1), _("GOT"), _n("WEAPONPORT_%d", evalue - 30000));
 							else
-								sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), weaponPort[evalue - 30000].name);
+								sprintf(tempStr, "%s %s", _("PLAYER_1_GOT"), _n("WEAPONPORT_%d", evalue - 30000));
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
 							shotMultiPos[SHOT_FRONT] = 0;
@@ -4827,7 +4827,7 @@ void JE_playerCollide(Player *this_player, JE_byte playerNum_)
 						}
 						else if (onePlayerAction)
 						{
-							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), weaponPort[evalue - 30000].name);
+							sprintf(tempStr, "%s %s", _("YOU_GOT_THE"), _n("WEAPONPORT_%d", evalue - 30000));
 							JE_drawTextWindow(tempStr);
 							player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
 							shotMultiPos[SHOT_FRONT] = 0;

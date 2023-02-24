@@ -330,6 +330,177 @@ INGAMEMENU_QUIT_LVL      :AQuit Level
 # Other Miscellanous Strings
 EMPTY_SAVE_SLOT_LINE     :A-----
 
+############## Items ##############
+WEAPONPORT_0             :ANone
+WEAPONPORT_1             :APulse-Cannon
+WEAPONPORT_2             :AMulti-Cannon
+WEAPONPORT_3             :AMega Cannon
+WEAPONPORT_4             :ALaser
+WEAPONPORT_5             :AZica Laser
+WEAPONPORT_6             :AProtron Z
+WEAPONPORT_7             :AVulcan Cannon
+WEAPONPORT_8             :ALightning Cannon
+WEAPONPORT_9             :AStarburst
+WEAPONPORT_10            :AMulti-Cannon
+WEAPONPORT_11            :ASonic Wave
+WEAPONPORT_12            :AProtron
+WEAPONPORT_13            :AProtron
+WEAPONPORT_14            :AWild Ball
+WEAPONPORT_15            :AVulcan Cannon
+WEAPONPORT_16            :AMiscellaneous Option Weapons
+WEAPONPORT_17            :AMissile Launcher
+WEAPONPORT_18            :AFireball
+WEAPONPORT_19            :AMega Pulse
+WEAPONPORT_20            :AHeavy Missile Launcher
+WEAPONPORT_21            :ARear Heavy Missile Launcher
+WEAPONPORT_22            :ARear Mega Pulse
+WEAPONPORT_23            :ABanana Blast
+WEAPONPORT_24            :ABanana Blast Rear
+WEAPONPORT_25            :AHotDog Front
+WEAPONPORT_26            :AHotDog Rear
+WEAPONPORT_27            :AHyper Pulse
+WEAPONPORT_28            :AGuided Micro Bombs
+WEAPONPORT_29            :AHeavy Guided Bombs
+WEAPONPORT_30            :AScatter Wave
+WEAPONPORT_31            :AGuided Bombs
+WEAPONPORT_32            :AShuruiken Field
+WEAPONPORT_33            :APoison Bomb
+WEAPONPORT_34            :AProtron Wave
+WEAPONPORT_35            :AThe Orange Juicer
+WEAPONPORT_36            :ANortShip Super Pulse
+WEAPONPORT_37            :ANortShip Spreader
+WEAPONPORT_38            :ANortShip Spreader B
+WEAPONPORT_39            :AAtomic RailGun
+WEAPONPORT_40            :AWidget Beam
+WEAPONPORT_41            :ASonic Impulse
+WEAPONPORT_42            :ARetroBall
+
+SPECIALITEM_0            :ANone
+SPECIALITEM_1            :ARepulsor
+SPECIALITEM_2            :APearl Wind
+SPECIALITEM_3            :ASoul of Zinglon
+SPECIALITEM_4            :AAttractor
+SPECIALITEM_5            :AIce Beam
+SPECIALITEM_6            :AFlare
+SPECIALITEM_7            :ABlade Field
+SPECIALITEM_8            :ASandStorm
+SPECIALITEM_9            :AMineField
+SPECIALITEM_10           :ADual Vulcan
+SPECIALITEM_11           :ABanana Bomb
+SPECIALITEM_12           :AProtron Dispersal
+SPECIALITEM_13           :AAstral Zone
+SPECIALITEM_14           :AXega Ball
+SPECIALITEM_15           :AMegaLaser Dual
+SPECIALITEM_16           :AOrange Shield
+SPECIALITEM_17           :APulse Blast
+SPECIALITEM_18           :AMegaLaser
+SPECIALITEM_19           :AMissile Pod
+SPECIALITEM_20           :AMinefield
+SPECIALITEM_21           :APost-It Blast
+SPECIALITEM_22           :ADrone **
+SPECIALITEM_23           :ARepair Player 1
+SPECIALITEM_24           :ASuper Bomb
+SPECIALITEM_25           :AHot Dog
+SPECIALITEM_26           :ALightning UP
+SPECIALITEM_27           :ALightning UP+LEFT
+SPECIALITEM_28           :ALightning UP+RIGHT
+SPECIALITEM_29           :ALightning LEFT
+SPECIALITEM_30           :ALightning RIGHT
+SPECIALITEM_31           :AMicroSol Option
+SPECIALITEM_32           :AMicroSol Option2
+SPECIALITEM_33           :AMicroSol Option3
+SPECIALITEM_34           :AMicroSol Option4
+SPECIALITEM_35           :AMicroSol Option5
+SPECIALITEM_36           :AMicroSol Option6
+SPECIALITEM_37           :AInvulnerability
+SPECIALITEM_38           :AAtom Bomb
+SPECIALITEM_39           :ASeeker Bombs
+SPECIALITEM_40           :ALightning Zone
+SPECIALITEM_41           :ASDF Main Gun
+SPECIALITEM_42           :AIce Blast
+SPECIALITEM_43           :ARepair Player 1
+SPECIALITEM_44           :APearl Wind
+SPECIALITEM_45           :A8-Way Microbomb
+SPECIALITEM_46           :AProtron Field
+
+GENITEM_0                :ANone
+GENITEM_1                :AStandard MR-9
+GENITEM_2                :AAdvanced MR-12
+GENITEM_3                :AGencore Custom MR-12
+GENITEM_4                :AStandard MicroFusion
+GENITEM_5                :AAdvanced MircoFusion
+GENITEM_6                :AGravitron Pulse-Wave
+
+SHIPNAME_0               :ANone
+SHIPNAME_1               :AUSP Talon Light Fighter
+SHIPNAME_2               :ASuperCarrot
+SHIPNAME_3               :AGencore Phoenix
+SHIPNAME_4               :AGencore Maelstrom
+SHIPNAME_5               :AMicroCorp Stalker
+SHIPNAME_6               :AMicroCorp Stalker-B
+SHIPNAME_7               :APrototype Stalker-C
+SHIPNAME_8               :AStalker
+SHIPNAME_9               :AUSP Fang Light Fighter
+SHIPNAME_10              :AU-Ship
+SHIPNAME_11              :ASilver Ship
+SHIPNAME_12              :ANort Ship
+SHIPNAME_13              :AThe Stalker 21.126
+SHIPNAME_91              :ACustom Ship 1
+SHIPNAME_92              :ACustom Ship 2
+SHIPNAME_93              :ACustom Ship 3
+SHIPNAME_94              :ACustom Ship 4
+SHIPNAME_95              :ACustom Ship 5
+SHIPNAME_96              :ACustom Ship 6
+SHIPNAME_97              :ACustom Ship 7
+SHIPNAME_98              :ACustom Ship 8
+SHIPNAME_99              :ACustom Ship 9
+SHIPNAME_100             :ACustom Ship 10
+
+SIDEKICK_0               :ANone
+SIDEKICK_1               :ASingle Shot Option
+SIDEKICK_2               :ADual Shot Option
+SIDEKICK_3               :ACharge Cannon
+SIDEKICK_4               :AVulcan Shot Option
+SIDEKICK_5               :AWobbley
+SIDEKICK_6               :AMegaMissile    Ammo 5
+SIDEKICK_7               :AAtom Bombs     Ammo 20
+SIDEKICK_8               :APhoenix Device Ammo 8
+SIDEKICK_9               :APlasma Storm   Ammo 10
+SIDEKICK_10              :AMini-Missile   Ammo 100
+SIDEKICK_11              :ABuster Rocket  Ammo 30
+SIDEKICK_12              :AZica SuperCharger
+SIDEKICK_13              :AMicroBomb      Ammo 60
+SIDEKICK_14              :A8-Way MicroBomb  Ammo 30
+SIDEKICK_15              :APost-It Mine   Ammo 20
+SIDEKICK_16              :AMint-O-Ship
+SIDEKICK_17              :AZica Flamethrower
+SIDEKICK_18              :ASide Ship      Ammo 100
+SIDEKICK_19              :ACompanion Ship Warfly
+SIDEKICK_20              :AMicroSol FrontBlaster
+SIDEKICK_21              :ACompanion Ship Gerund
+SIDEKICK_22              :ABattleShip-Class Firebomb
+SIDEKICK_23              :AProtron Cannon Indigo
+SIDEKICK_24              :ACompanion Ship Quicksilver
+SIDEKICK_25              :AProtron Cannon Tangerine
+SIDEKICK_26              :AMicroSol FrontBlaster II
+SIDEKICK_27              :ABeno Wallop Beam
+SIDEKICK_28              :ABeno Protron System -B-
+SIDEKICK_29              :ATropical Cherry Companion
+SIDEKICK_30              :ASatellite Marlo
+
+SHIELDNAME_0             :ANone
+SHIELDNAME_1             :AStructural Integrity Field
+SHIELDNAME_2             :AAdvanced Integrity Field
+SHIELDNAME_3             :AGencore Low Energy Shield
+SHIELDNAME_4             :AGencore High Energy Shield
+SHIELDNAME_5             :AMicroCorp LXS Class A
+SHIELDNAME_6             :AMicroCorp LXS Class B
+SHIELDNAME_7             :AMicroCorp LXS Class C
+SHIELDNAME_8             :AMicroCorp HXS Class A
+SHIELDNAME_9             :AMicroCorp HXS Class B
+SHIELDNAME_10            :AMicroCorp HXS Class C
+
+
 ############## Start of Datacubes ##############
 DATACUBE_1_1_TITLE       :A~TYRIAN~ DATAFLUX 040-54-871
 DATACUBE_1_1_HEADER      :AData
