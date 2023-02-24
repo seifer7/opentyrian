@@ -1,5 +1,7 @@
 # Any line starting with a # symbol is a comment and ignored by the game.
 # Most areas of the game support using "~" symbols to ~highlight~ words.
+#
+# Multiline strings are to be enclosed in ` backticks. 
 
 # Main Menu Options
 OPENTYRIAN              :AOpenTyrian
@@ -111,7 +113,7 @@ INSERT_COIN              :AINSERT COIN
 JOYSTICK_RECALIBRATED    :AJoystick recalibrated
 OK                       :AOK
 CANCEL                   :ACANCEL
-READ                     :ARead:
+READ_                    :ARead:
 EXIT                     :AEXIT
 DONE                     :ADONE
 NONE                     :ANone
@@ -326,10 +328,21 @@ INGAMEMENU_RETURN_TO_GAME:AReturn to Game
 INGAMEMENU_QUIT_LVL      :AQuit Level
 
 # Other Miscellanous Strings
-EMPTY_SAVE_SLOT_LINE    :A-----
+EMPTY_SAVE_SLOT_LINE     :A-----
 
-# Datacubes
-# Body uses "|" as linebreaks and "~" to ~highlight~ words.
-DATACUBE_1_1_TITLE      :A~TYRIAN~ DATAFLUX 040-54-871
-DATACUBE_1_1_HEADER     :AData
-DATACUBE_1_1_BODY       :AAfter gathering all the available data, I think I've found the safest course into Tyrian orbit from my landing platform...|After heading due west out of the Fauchi mines you should come in contact with the floating battle platforms. Watch for the auto targeting plasma turrets and especially the ~construction~ ~claws~. |Whoever designed these platforms sure counted on spies and infiltrators, as they're loaded with small squadrons of surface ~attack~ ~drones~ as well. |I think these platforms are filled with ~Gravitic Ore~, which would explain why they're floating. No wonder ~Microsol~ wants to mine them so badly. I just hope I don't get intercepted before I reach orbit.
+############## Start of Datacubes ##############
+DATACUBE_1_1_TITLE       :A~TYRIAN~ DATAFLUX 040-54-871
+DATACUBE_1_1_HEADER      :AData
+DATACUBE_1_1_BODY        :`AAfter gathering all the available data, I think I've found the safest course into Tyrian orbit from my landing platform...
+
+After heading due west out of the Fauchi mines you should come in contact with the floating battle platforms. Watch for the auto targeting plasma turrets and especially the ~construction~ ~claws~. 
+
+Whoever designed these platforms sure counted on spies and infiltrators, as they're loaded with small squadrons of surface ~attack~ ~drones~ as well. 
+
+I think these platforms are filled with ~Gravitic Ore~, which would explain why they're floating. No wonder ~Microsol~ wants to mine them so badly. I just hope I don't get intercepted before I reach orbit.`
+
+DATACUBE_1_2_TITLE       :Test Data Cube Title
+DATACUBE_1_2_HEADER      :Tester
+DATACUBE_1_2_BODY        :`This is a test datacube`
+
+############## End of Datacubes ##############

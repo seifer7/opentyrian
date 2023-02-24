@@ -32,6 +32,9 @@
 #include <stddef.h>
 #include <string.h>
 
+// Need to disable warning for error code 4774
+// 'snprintf' : format string expected in argument 3 is not a string literal
+// Because the value fed into snprintf needs to be dynamicly generated in functions _n and _nn.
 #pragma warning( disable : 4774)
 
 Language current_language;
@@ -125,9 +128,6 @@ void language_load(void) {
     FILE* fi;
     fi = dir_fopen_die(get_user_directory(), "data/lang/english-us.txt", "r");
 	language_parse(&current_language, fi);
-
-	language_find_line(lang, "START_NEW_GAME");
-	_("START_NEW_GAME");
 }
 
 bool language_parse(Language* language, FILE* file)
@@ -144,14 +144,18 @@ bool language_parse(Language* language, FILE* file)
 
 	for (size_t line = 0, next_line = 0; ; line = next_line)
 	{
+		char first_char = '\0';
+		bool reading_multiline = false;
+		int flags = 0;
 		/* find beginning of next line */
 		while (next_line < buffer_end)
 		{
 			char c = buffer[next_line];
+			if(first_char == '\0') first_char = buffer[next_line];
 
 			if (c == '\0' && next_line == buffer_end - 1)
 			{
-				if (line > 0)
+				if (line > 0 && !reading_multiline)
 				{
 					/* shift to front */
 					memmove(&buffer[0], &buffer[line], buffer_end - line);
@@ -181,7 +185,23 @@ bool language_parse(Language* language, FILE* file)
 				++next_line;
 
 				if (c == '\n' || c == '\r')
-					break;
+				{
+					reading_multiline = false;
+					size_t i = line;
+					flags = language_line_flags(buffer, &i);
+					if (flags & IS_MULTILINE) {
+						if (flags & HAS_MULTILINE_END) {
+							break;
+						}
+						else {
+							// We haven't got the end of the multiline yet!
+							reading_multiline = true;
+						}
+					}
+					else {
+						break;
+					}
+				}
 			}
 		}
 
@@ -193,7 +213,9 @@ bool language_parse(Language* language, FILE* file)
 
 		assert(i <= next_line);
 
-		language_parse_line(language, buffer, &i);
+		if (!(flags & (IS_COMMENT | IS_EMPTY)))
+			language_parse_line(language, buffer, &i);
+		first_char = '\0';
 	}
 
 	free(buffer);
@@ -201,15 +223,51 @@ bool language_parse(Language* language, FILE* file)
 	return language;
 }
 
-void language_parse_line(Language* language, const char* buffer, size_t* index) {
+int language_line_flags(const char* buffer, size_t* index) {
+	int flags = 0;
+	size_t i = *index;
+	char c = buffer[i];
+
+	if (is_end(c)) {
+		flags |= IS_EMPTY;
+	}
+	else if (c == '#') {
+		flags |= IS_COMMENT;
+	}
+	else if (c == '%') {
+		char check_if[5];
+		strncpy(check_if, buffer + i, sizeof(check_if));
+		check_if[4] = '\0';
+		char check_endif[7];
+		strncpy(check_endif, buffer + i, sizeof(check_endif));
+		check_endif[6] = '\0';
+
+		if (strcmp("%IF ", check_if) == 0) {
+			flags |= IS_CONDITION_START;
+		}
+		else if (strcmp("%ENDIF", check_endif) == 0) {
+			flags |= IS_CONDITION_END;
+		}
+	}
+	else {
+		size_t value_start = 0;
+		size_t value_end = 0;
+		language_parse_line_get_value_pos(&value_start, &value_end, buffer, &i);
+		if (buffer[value_start] == '`') {
+			flags |= IS_MULTILINE | HAS_MULTILINE_START;
+		}
+		if (buffer[value_end-1] == '`') {
+			flags |= IS_MULTILINE | HAS_MULTILINE_END;
+		}
+	}
+
+	return flags;
+}
+
+void language_parse_line_get_key(char *key, const char* buffer, size_t* index) {
 	size_t i = *index;
 	size_t key_start;
 	size_t key_end;
-	size_t value_start;
-	size_t value_end;
-
-	char c = buffer[i];
-	if (c == '#') return; // This line is a comment
 
 	while (is_whitespace(buffer[i]))
 		++i;
@@ -225,24 +283,51 @@ void language_parse_line(Language* language, const char* buffer, size_t* index) 
 		}
 	}
 
+	strncpy(key, buffer + key_start, MIN(LANGUAGE_LINE_KEY_LENGTH, (key_end - key_start)));
+}
+
+void language_parse_line_get_value_pos(size_t* start, size_t* end, const char* buffer, size_t* index) {
+	size_t i = *index;
+	bool is_multiline = false;
+
 	while (is_whitespace(buffer[i]))
 		++i;
-	++i;
 
-	// Get the string
-	value_start = i;
+	// Skip string key
 	for (; ; ++i)
 	{
 		char c = buffer[i];
-		if (is_end(c)) {
-			value_end = i;
-			break;
-		}
+		if (c == ':') break;
 	}
+	i++;
+
+	// Get the string
+	*start = i;
+	char c = buffer[i];
+	if (c == '`') is_multiline = true;
+
+	for (; ; ++i)
+	{
+		char c = buffer[i];
+		if (c == '\0' || (!is_multiline && is_end(c)) || (is_multiline && i > *start && is_end(c) && buffer[i-1] == '`')) break;
+	}
+	*end = i;
+}
+
+void language_parse_line(Language* language, const char* buffer, size_t* index) {
+	size_t i = *index;
+	size_t value_start = 0;
+	size_t value_end = 0;
+	char key[LANGUAGE_LINE_KEY_LENGTH + 1] = "";
+
+	language_parse_line_get_key(key, buffer, &i);
+	language_parse_line_get_value_pos(&value_start, &value_end, buffer, &i);
+	if (buffer[value_start] == '`') value_start++, value_end--;
+
 	language_add_line_len(language,
-		&buffer[key_start],
+		key,
 		&buffer[value_start],
-		key_end - key_start,
+		strlen(key),
 		value_end - value_start);
 }
 

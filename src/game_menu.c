@@ -1784,7 +1784,7 @@ bool load_cube(int cube_slot, int cube_index)
 		if (cube_text == NULL) break;
 
 		bool end_of_file = (cube_text[i] == '\0'),
-				end_of_line = (end_of_file || cube_text[i] == '|'),
+				end_of_line = (end_of_file || cube_text[i] == '\n'),
 			    end_of_word = (end_of_line || cube_text[i] == ' ');
 
 		if (end_of_word)

@@ -45,6 +45,8 @@
 #define LANGUAGE_STRING_LONG_TAG(s) ((s).short_buf[COUNTOFA((s).short_buf) - 1])
 /*! \endcond */
 
+#define LANGUAGE_LINE_KEY_LENGTH 25
+
 typedef union
 {
 	/*!
@@ -69,6 +71,16 @@ typedef struct {
     unsigned int line_count;
     LanguageLine *lines;
 } Language;
+
+enum {
+	IS_COMMENT = 1 << 0,
+	IS_EMPTY = 1 << 1,
+	IS_MULTILINE = 1 << 2,
+	HAS_MULTILINE_START = 1 << 3,
+	HAS_MULTILINE_END = 1 << 4,
+	IS_CONDITION_START = 1 << 5,
+	IS_CONDITION_END = 1 << 6,
+};
 
 extern Language current_language;
 
@@ -95,7 +107,10 @@ static inline LanguageLine* language_add_line(Language* language, char* name, ch
 }
 
 void language_oom(void);
+int language_line_flags(const char* buffer, size_t* index);
 bool language_parse(Language* language, FILE* file);
+void language_parse_line_get_key(char* key, const char* buffer, size_t* index);
+void language_parse_line_get_value_pos(size_t* start, size_t* end, const char* buffer, size_t* index);
 void language_parse_line(Language* language, const char* buffer, size_t* index);
 extern void language_load(void);
 extern LanguageLine* language_find_line(Language* language, const char* name);
