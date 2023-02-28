@@ -309,7 +309,7 @@ void language_parse_line_get_value_pos(size_t* start, size_t* end, const char* b
 	for (; ; ++i)
 	{
 		char c = buffer[i];
-		if (c == '\0' || (!is_multiline && is_end(c)) || (is_multiline && i > *start && is_end(c) && buffer[i-1] == '`')) break;
+		if (c == '\0' || (!is_multiline && is_end(c)) || (is_multiline && i > *start+1 && is_end(c) && buffer[i-1] == '`')) break;
 	}
 	*end = i;
 }

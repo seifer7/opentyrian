@@ -1781,8 +1781,8 @@ bool load_cube(int cube_slot, int cube_index)
 		if (cube_text == NULL) break;
 
 		bool end_of_file = (cube_text[i] == '\0'),
-				end_of_line = (end_of_file || cube_text[i] == '\n'),
-			    end_of_word = (end_of_line || cube_text[i] == ' ');
+				end_of_line = (end_of_file || cube_text[i] == '\n' && cube_text[i+1] == '\n'),
+			    end_of_word = (end_of_line || cube_text[i] == ' ' || cube_text[i] == '\n');
 
 		if (end_of_word)
 		{
@@ -1825,10 +1825,12 @@ bool load_cube(int cube_slot, int cube_index)
 			}
 		}
 		if (end_of_line) {
-			++line;
+			line++;
+			i++;
 			line_chars = 0;
 			line_width = 0;
 		}
+		
 		if (end_of_file) break;
 	}
 
