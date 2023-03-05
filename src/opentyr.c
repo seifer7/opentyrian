@@ -56,8 +56,46 @@
 #include <string.h>
 #include <time.h>
 
-const char *opentyrian_str = "OpenTyrian";
+const char *opentyrian_str = "Tyrian Reloaded";
 const char *opentyrian_version = OPENTYRIAN_VERSION;
+
+extern JE_ShipType* ships;
+
+bool str_pop_int(char* str, int* val)
+{
+	bool success = false;
+
+	char buf[256];
+	assert(strlen(str) < sizeof(buf));
+
+	// grab the value from str
+	char* end;
+	*val = strtol(str, &end, 10);
+
+	if (end != str)
+	{
+		success = true;
+
+		// shift the rest to the beginning
+		strcpy(buf, end);
+		strcpy(str, buf);
+	}
+
+	return success;
+}
+
+static size_t getShopContentsPickerItemsCount(void)
+{
+	return 3;
+}
+
+static const char* getShopContentsPickerItem(size_t i, char* buffer, size_t bufferSize)
+{
+	(void)buffer, (void)bufferSize;
+	if (i == 1) return "Mixed";
+	if (i == 2) return "Random";
+	return "Mission";
+}
 
 static size_t getDisplayPickerItemsCount(void)
 {
@@ -107,6 +145,8 @@ void setupMenu(void)
 		MENU_ITEM_SOUND,
 		MENU_ITEM_JUKEBOX,
 		MENU_ITEM_DESTRUCT,
+		MENU_ITEM_GAMEPLAY,
+		MENU_ITEM_SHOP_CONTENTS,
 		MENU_ITEM_DISPLAY,
 		MENU_ITEM_SCALER,
 		MENU_ITEM_SCALING_MODE,
@@ -120,6 +160,7 @@ void setupMenu(void)
 		MENU_SETUP,
 		MENU_GRAPHICS,
 		MENU_SOUND,
+		MENU_GAMEPLAY,
 	} MenuId;
 
 	typedef struct
@@ -145,6 +186,7 @@ void setupMenu(void)
 				{ MENU_ITEM_SOUND, "Sound...", "Change the sound settings." },
 				{ MENU_ITEM_JUKEBOX, "Jukebox", "Listen to the music of Tyrian." },
 				// { MENU_ITEM_DESTRUCT, "Destruct", "Play a bonus mini-game." },
+				{ MENU_ITEM_GAMEPLAY, "Gameplay", "Change gameplay setttings." },
 				{ MENU_ITEM_DONE, "Done", "Return to the main menu." },
 				{ -1 }
 			},
@@ -164,6 +206,14 @@ void setupMenu(void)
 			.items = {
 				{ MENU_ITEM_MUSIC_VOLUME, "Music Volume", "Change volume with the left/right arrow keys." },
 				{ MENU_ITEM_SOUND_VOLUME, "Sound Volume", "Change volume with the left/right arrow keys." },
+				{ MENU_ITEM_DONE, "Done", "Return to the previous menu." },
+				{ -1 }
+			},
+		},
+		[MENU_GAMEPLAY] = {
+			.header = "Gameplay",
+			.items = {
+				{ MENU_ITEM_SHOP_CONTENTS, "Shop Contents:", "Change how the Upgrade shop is filled.", getShopContentsPickerItemsCount, getShopContentsPickerItem },
 				{ MENU_ITEM_DONE, "Done", "Return to the previous menu." },
 				{ -1 }
 			},
@@ -271,6 +321,18 @@ void setupMenu(void)
 				JE_rectangle(VGAScreen, xMenuItemValue - 2, y - 2, xMenuItemValue + 96, y + 11, 242);
 				break;
 
+			case MENU_ITEM_SHOP_CONTENTS:;
+				const char* shopContentsValue = "Mission";
+				if (shopContentSetting == 1) {
+					shopContentsValue = "Mixed";
+				}
+				else if (shopContentSetting == 2) {
+					shopContentsValue = "Random";
+				}
+
+				draw_font_hv_shadow(VGAScreen, xMenuItemValue, y, shopContentsValue, normal_font, left_aligned, 15, -3 + (selected ? 2 : 0) + (disabled ? -4 : 0), false, 2);
+				break;
+
 			default:
 				break;
 			}
@@ -373,6 +435,7 @@ void setupMenu(void)
 								{
 									switch (menuItems[*selectedMenuItemIndex].id)
 									{
+									case MENU_ITEM_SHOP_CONTENTS:
 									case MENU_ITEM_DISPLAY:
 									case MENU_ITEM_SCALER:
 									case MENU_ITEM_SCALING_MODE:
@@ -560,6 +623,23 @@ void setupMenu(void)
 					restart = true;
 					break;
 				}
+				case MENU_ITEM_GAMEPLAY:
+				{
+					JE_playSampleNum(S_SELECT);
+
+					menuParents[MENU_GAMEPLAY] = currentMenu;
+					currentMenu = MENU_GAMEPLAY;
+					selectedMenuItemIndexes[currentMenu] = 0;
+					break;
+				}
+				case MENU_ITEM_SHOP_CONTENTS:
+				{
+					JE_playSampleNum(S_CLICK);
+
+					currentPicker = selectedMenuItemId;
+					pickerSelectedIndex = shopContentSetting;
+					break;
+				}
 				case MENU_ITEM_DISPLAY:
 				{
 					JE_playSampleNum(S_CLICK);
@@ -735,6 +815,12 @@ void setupMenu(void)
 					scaling_mode = pickerSelectedIndex;
 					break;
 				}
+				case MENU_ITEM_SHOP_CONTENTS:
+				{
+					shopContentSetting = pickerSelectedIndex;
+					JE_saveConfiguration();
+					break;
+				}
 				default:
 					break;
 				}
@@ -770,6 +856,8 @@ int main(int argc, char *argv[])
 	JE_paramCheck(argc, argv);
 
 	JE_scanForEpisodes();
+
+	load_items();
 
 	init_video();
 	init_keyboard();

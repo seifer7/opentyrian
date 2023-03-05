@@ -204,8 +204,15 @@ void JE_itemScreen(void)
 
 		if (slot == itemAvailMax[itemAvailMap[i]-1])
 		{
-			itemAvail[itemAvailMap[i]-1][slot] = item;
-			itemAvailMax[itemAvailMap[i]-1]++;
+			if (itemAvailMax[itemAvailMap[i] - 1] > 4) { // Until we have a scrollable shop menu, we can't display this many items!
+				itemAvail[itemAvailMap[i] - 1][4] = item;
+				itemAvail[itemAvailMap[i] - 1][5] = '\0';
+				itemAvailMax[itemAvailMap[i] - 1] = 5;
+			}
+			else {
+				itemAvail[itemAvailMap[i] - 1][slot] = item;
+				itemAvailMax[itemAvailMap[i] - 1]++;
+			}
 		}
 	}
 
@@ -1239,6 +1246,24 @@ void JE_itemScreen(void)
 		{
 			switch (lastkey_scan)
 			{
+			case SDL_SCANCODE_EQUALS:
+				if (curMenu == MENU_UPGRADE_SUB && (curSel[MENU_UPGRADES] == 3 || curSel[MENU_UPGRADES] == 4)) {
+					int weaponType = (curSel[MENU_UPGRADES] == 3 ? FRONT_WEAPON : REAR_WEAPON);
+					int tempPwr = player[0].items.weapon[weaponType].power - 1;
+					JE_word opval = weaponPort[player[0].items.weapon[weaponType].id].op[0][tempPwr];
+					opval++;
+					memcpy(&weaponPort[player[0].items.weapon[weaponType].id].op[0][tempPwr], &opval, sizeof(weaponPort[player[0].items.weapon[weaponType].id].op[0][tempPwr]));
+				}
+				break;
+			case SDL_SCANCODE_MINUS:
+				if (curMenu == MENU_UPGRADE_SUB && (curSel[MENU_UPGRADES] == 3 || curSel[MENU_UPGRADES] == 4)) {
+					int weaponType = (curSel[MENU_UPGRADES] == 3 ? FRONT_WEAPON : REAR_WEAPON);
+					int tempPwr = player[0].items.weapon[weaponType].power - 1;
+					JE_word opval = weaponPort[player[0].items.weapon[weaponType].id].op[0][tempPwr];
+					opval--;
+					memcpy(&weaponPort[player[0].items.weapon[weaponType].id].op[0][tempPwr], &opval, sizeof(weaponPort[player[0].items.weapon[weaponType].id].op[0][tempPwr]));
+				}
+				break;
 			case SDL_SCANCODE_SLASH:
 				// if in rear weapon upgrade screen
 				if (curMenu == MENU_UPGRADE_SUB && curSel[MENU_UPGRADES] == 4)
@@ -1643,88 +1668,58 @@ void JE_itemScreen(void)
 
 void draw_ship_illustration(void)
 {
-	// full of evil hardcoding
-
 	// ship
 	{
 		assert(player[0].items.ship > 0);
 
-		const int sprite_id = (player[0].items.ship < COUNTOF(ships))  // shipedit ships get a default
-		                      ? ships[player[0].items.ship].bigshipgraphic - 1
-		                      : 31;
+		JE_ShipType *ship;
+		if (strcmp(ships[player[0].items.ship].id, "") != 0) {
+			ship = &ships[player[0].items.ship];
+		}
+		else {
+			JE_byte defaultShipIndex = 0;
+			get_item_index(&tempItemType, "1", &defaultShipIndex);
+			ship = &ships[defaultShipIndex];
+		}
+		
+		const int sprite_id = ship->bigshipgraphic - 1;
 
-		const int ship_x[6] = { 31, 0, 0, 0, 35, 31 },
-		          ship_y[6] = { 36, 0, 0, 0, 33, 35 };
-
-		const int x = ship_x[sprite_id - 27],
-		          y = ship_y[sprite_id - 27];
+		const int x = ship->bigshipgraphx,
+			y = ship->bigshipgraphy;
 
 		blit_sprite(VGAScreenSeg, x, y, OPTION_SHAPES, sprite_id);
 	}
 
 	// generator
 	{
-		assert(player[0].items.generator > 0 && player[0].items.generator < 7);
+		assert(player[0].items.generator > 0);
 
-		const int sprite_id = (player[0].items.generator == 1)  // generator 1 and generator 2 have the same sprite
-		                      ? player[0].items.generator + 15
-		                      : player[0].items.generator + 14;
+		const int sprite_id = powerSys[player[0].items.generator].bigshipgraphic;
 
-		const int generator_x[5] = { 62, 64, 67, 66, 63 },
-		          generator_y[5] = { 84, 85, 86, 84, 97 };
-		const int x = generator_x[sprite_id - 16],
-		          y = generator_y[sprite_id - 16];
+		const int x = powerSys[player[0].items.generator].bigshipgraphx,
+			y = powerSys[player[0].items.generator].bigshipgraphy;
 
 		blit_sprite(VGAScreenSeg, x, y, WEAPON_SHAPES, sprite_id);
 	}
 
-	const int weapon_sprites[43] =
-	{
-		-1,  0,  1,  2,  3,  4,  5,  6,  7,  8,
-		 9, 10, 11, 21,  5, 13, -1, 14, 15,  0,
-		14,  9,  8,  2, 15,  0, 13,  0,  8,  8,
-		11,  1,  0,  0,  0,  0,  0,  0,  0,  0,
-		 0,  2,  1
-	};
-
 	// front weapon
 	if (player[0].items.weapon[FRONT_WEAPON].id > 0)
 	{
-		const int front_weapon_xy_list[43] =
-		{
-			 -1,  4,  9,  3,  8,  2,  5, 10,  1, -1,
-			 -1, -1, -1,  7,  8, -1, -1,  0, -1,  4,
-			  0, -1, -1,  3, -1,  4, -1,  4, -1, -1,
-			 -1,  9,  0,  0,  0,  0,  0,  0,  0,  0,
-			  0,  3,  9
-		};
+		const int weapon_sprite = weaponPort[player[0].items.weapon[FRONT_WEAPON].id].bigshipgraphic;
+		const int x = weaponPort[player[0].items.weapon[FRONT_WEAPON].id].bigshipgraphfrntx,
+		          y = weaponPort[player[0].items.weapon[FRONT_WEAPON].id].bigshipgraphfrnty;
 
-		const int front_weapon_x[12] = { 59, 66, 66, 54, 61, 51, 58, 51, 61, 52, 53, 58 };
-		const int front_weapon_y[12] = { 38, 53, 41, 36, 48, 35, 41, 35, 53, 41, 39, 31 };
-		const int x = front_weapon_x[front_weapon_xy_list[player[0].items.weapon[FRONT_WEAPON].id]],
-		          y = front_weapon_y[front_weapon_xy_list[player[0].items.weapon[FRONT_WEAPON].id]];
-
-		blit_sprite(VGAScreenSeg, x, y, WEAPON_SHAPES, weapon_sprites[player[0].items.weapon[FRONT_WEAPON].id]);  // ship illustration: front weapon
+		blit_sprite(VGAScreenSeg, x, y, WEAPON_SHAPES, weapon_sprite);  // ship illustration: front weapon
 	}
 
 	// rear weapon
 	if (player[0].items.weapon[REAR_WEAPON].id > 0)
 	{
-		const int rear_weapon_xy_list[43] =
-		{
-			-1, -1, -1, -1, -1, -1, -1, -1, -1,  0,
-			 1,  2,  3, -1,  4,  5, -1, -1,  6, -1,
-			-1,  1,  0, -1,  6, -1,  5, -1,  0,  0,
-			 3,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-			 0, -1, -1
-		};
+		const int weapon_sprite = weaponPort[player[0].items.weapon[REAR_WEAPON].id].bigshipgraphic;
+		const int x = weaponPort[player[0].items.weapon[REAR_WEAPON].id].bigshipgraphrearx,
+		          y = weaponPort[player[0].items.weapon[REAR_WEAPON].id].bigshipgraphreary;
 
-		const int rear_weapon_x[7] = { 41, 27,  49,  43, 51, 39, 41 };
-		const int rear_weapon_y[7] = { 92, 92, 113, 102, 97, 96, 76 };
-		const int x = rear_weapon_x[rear_weapon_xy_list[player[0].items.weapon[REAR_WEAPON].id]],
-		          y = rear_weapon_y[rear_weapon_xy_list[player[0].items.weapon[REAR_WEAPON].id]];
-
-		blit_sprite(VGAScreenSeg, x, y, WEAPON_SHAPES, weapon_sprites[player[0].items.weapon[REAR_WEAPON].id]);
+		blit_sprite(VGAScreenSeg, x, y, WEAPON_SHAPES, weapon_sprite);
 	}
 
 	// sidekicks
@@ -2613,14 +2608,16 @@ void JE_menuFunction(JE_byte select)
 		switch (select)
 		{
 		case 2:
-			curMenu = MENU_LOAD_SAVE;
-			performSave = false;
-			quikSave = false;
+			//curMenu = MENU_LOAD_SAVE;
+			//performSave = false;
+			//quikSave = false;
+			saveLoadGameScreen(false);
 			break;
 		case 3:
-			curMenu = MENU_LOAD_SAVE;
-			performSave = true;
-			quikSave = false;
+			//curMenu = MENU_LOAD_SAVE;
+			//performSave = true;
+			//quikSave = false;
+			saveLoadGameScreen(true);
 			break;
 		case 6:
 			curMenu = MENU_JOYSTICK_CONFIG;
@@ -3122,6 +3119,13 @@ void JE_weaponSimUpdate(void)
 
 		sprintf(buf, "POWER: %d", temp);
 		JE_outText(VGAScreen, 58, 137, buf, 15, 4);
+
+		if ((curSel[MENU_UPGRADES] == 3 || curSel[MENU_UPGRADES] == 4)) {
+			int weaponType = (curSel[MENU_UPGRADES] == 3 ? FRONT_WEAPON : REAR_WEAPON);
+			JE_word opval = weaponPort[player[0].items.weapon[weaponType].id].op[0][temp-1];
+			sprintf(buf, "Shot: %d", opval);
+			JE_outText(VGAScreen, 58, 127, buf, 15, 4);
+		}
 	}
 	else
 	{

@@ -2289,10 +2289,14 @@ draw_player_shot_loop_end:
 				}
 				if (requests & 8) // nortship
 				{
-					player[0].items.ship = 12;                     // Nort Ship
-					player[0].items.special = 13;                  // Astral Zone
-					player[0].items.weapon[FRONT_WEAPON].id = 36;  // NortShip Super Pulse
-					player[0].items.weapon[REAR_WEAPON].id = 37;   // NortShip Spreader
+					tempItemType = ItemType_Ship;
+					player[0].items.ship = item_idx(&tempItemType, "12"); // Nort Ship
+					tempItemType = ItemType_Special;
+					player[0].items.special = item_idx(&tempItemType, "13"); // Astral Zone
+					tempItemType = ItemType_WeaponFront;
+					player[0].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, "36"); // NortShip Super Pulse
+					tempItemType = ItemType_WeaponRear;
+					player[0].items.weapon[REAR_WEAPON].id = item_idx(&tempItemType, "37"); // NortShip Spreader
 					shipGr = 1;
 				}
 
@@ -2503,7 +2507,8 @@ new_game:
 						galagaMode = true;   /*GALAGA mode*/
 
 						player[1].items = player[0].items;
-						player[1].items.weapon[REAR_WEAPON].id = 15;  // Vulcan Cannon
+						tempItemType = ItemType_WeaponRear;
+						player[1].items.weapon[REAR_WEAPON].id = item_idx(&tempItemType, "15"); // Vulcan Cannon
 						for (uint i = 0; i < COUNTOF(player[1].items.sidekick); ++i)
 							player[1].items.sidekick[i] = 0;          // None
 						break;
@@ -2521,13 +2526,17 @@ new_game:
 
 						player[0].cash = 0;
 
-						player[0].items.ship = 13;                     // The Stalker 21.126
-						player[0].items.weapon[FRONT_WEAPON].id = 39;  // Atomic RailGun
+						tempItemType = ItemType_Ship;
+						player[0].items.ship = item_idx(&tempItemType, "13"); // The Stalker 21.126
+						tempItemType = ItemType_WeaponFront;
+						player[0].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, "39"); // Atomic RailGun
 						player[0].items.weapon[REAR_WEAPON].id = 0;    // None
 						for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i)
 							player[0].items.sidekick[i] = 0;           // None
-						player[0].items.generator = 2;                 // Advanced MR-12
-						player[0].items.shield = 4;                    // Advanced Integrity Field
+						tempItemType = ItemType_Generator;
+						player[0].items.generator = item_idx(&tempItemType, "2"); // Advanced MR-12
+						tempItemType = ItemType_Shield;
+						player[0].items.shield = item_idx(&tempItemType, "4"); // Advanced Integrity Field
 						player[0].items.special = 0;                   // None
 
 						player[0].items.weapon[FRONT_WEAPON].power = 3;
@@ -2595,6 +2604,18 @@ new_game:
 
 					case 'I': /*Load Items Available Information*/
 						memset(&itemAvail, 0, sizeof(itemAvail));
+						memset(&itemAvailMax, 0, sizeof(itemAvailMax));
+						enum ITEM_TYPE storeItemTypes[9] = {
+							ItemType_Ship,
+							ItemType_WeaponFront,
+							ItemType_WeaponRear,
+							ItemType_Generator,
+							ItemType_Count,
+							ItemType_SidekickLeft,
+							ItemType_SidekickRight,
+							ItemType_Count,
+							ItemType_Shield
+						};
 
 						for (int i = 0; i < 9; ++i)
 						{
@@ -2604,8 +2625,22 @@ new_game:
 							strncpy(buf, (strlen(s) > 8) ? s + 8 : "", sizeof(buf));
 
 							int j = 0, temp;
-							while (str_pop_int(buf, &temp))
-								itemAvail[i][j++] = temp;
+							if (shopContentSetting < 2) {
+								while (str_pop_int(buf, &temp))
+									get_item_index_from_int(&storeItemTypes[i], &temp, &itemAvail[i][j++]);
+							}
+							if (shopContentSetting > 0 && j < 5) {
+								for (; ; ) {
+									bool random_add_success = add_random_shop_item(&storeItemTypes[i], itemAvail[i], j, COUNTOF(itemAvail[i]));
+									if (random_add_success) {
+										j++;
+									}
+									else {
+										break;
+									}
+									if (j >= 5) break;
+								}
+							}
 							itemAvailMax[i] = j;
 						}
 
@@ -3007,7 +3042,7 @@ new_game:
 	}
 
 	if (play_demo)
-		load_next_demo();
+		if (!load_next_demo()) return;
 	else
 		fade_black(50);
 
@@ -3066,6 +3101,17 @@ new_game:
 			memset(shape, 0, sizeof(shape));
 		else
 			fread_u8_die(shape, sizeof(shape), shpFile);
+
+		#ifdef DO_DECYRPT
+		if (!shapeBlank) {
+			char filename[60];
+			snprintf(filename, sizeof(filename), "data\\shapes\\%c_%d.pcx", char_shapeFile, z);
+			FILE* outF = dir_fopen(get_user_directory(), filename, "wb");
+			write_pcx_header(outF, 24, 28);
+			fwrite_u8(shape, sizeof(shape), outF);
+			fclose(outF);
+		}
+		#endif
 
 		/* Match 1 */
 		for (int x = 0; x <= 71; ++x)
@@ -3129,6 +3175,13 @@ new_game:
 
 	fclose(shpFile);
 
+	#ifdef DO_DECYRPT
+	char filename[60];
+	snprintf(filename, sizeof(filename), "data\\levels\\og_%d_%d.txt", episodeNum, lvlFileNum);
+	FILE* outF = dir_fopen(get_user_directory(), filename, "w");
+	fputs("*MAP 1*\n", outF);
+	#endif
+
 	fread_u8_die(mapBuf, 14 * 300, level_f);
 	bufLoc = 0;              /* MAP NUMBER 1 */
 	for (y = 0; y < 300; y++)
@@ -3136,10 +3189,18 @@ new_game:
 		for (x = 0; x < 14; x++)
 		{
 			megaData1.mainmap[y][x] = ref[0][mapBuf[bufLoc]];
+			#ifdef DO_DECYRPT
+			fprintf(outF, "%*d ", 3, mapBuf[bufLoc]);
+			#endif
 			bufLoc++;
 		}
+		#ifdef DO_DECYRPT
+		fputs("\n", outF);
+		#endif
 	}
-
+	#ifdef DO_DECYRPT
+	fputs("\n\n\n\n*MAP 2*\n", outF);
+	#endif
 	fread_u8_die(mapBuf, 14 * 600, level_f);
 	bufLoc = 0;              /* MAP NUMBER 2 */
 	for (y = 0; y < 600; y++)
@@ -3147,10 +3208,18 @@ new_game:
 		for (x = 0; x < 14; x++)
 		{
 			megaData2.mainmap[y][x] = ref[1][mapBuf[bufLoc]];
+#ifdef DO_DECYRPT
+			fprintf(outF, "%*d ", 3, mapBuf[bufLoc]);
+#endif
 			bufLoc++;
 		}
+#ifdef DO_DECYRPT
+		fputs("\n", outF);
+#endif
 	}
-
+#ifdef DO_DECYRPT
+	fputs("\n\n\n\n*MAP 3*\n", outF);
+#endif
 	fread_u8_die(mapBuf, 15 * 600, level_f);
 	bufLoc = 0;              /* MAP NUMBER 3 */
 	for (y = 0; y < 600; y++)
@@ -3158,9 +3227,61 @@ new_game:
 		for (x = 0; x < 15; x++)
 		{
 			megaData3.mainmap[y][x] = ref[2][mapBuf[bufLoc]];
+#ifdef DO_DECYRPT
+			fprintf(outF, "%*d ", 3, mapBuf[bufLoc]);
+#endif
 			bufLoc++;
 		}
+#ifdef DO_DECYRPT
+		fputs("\n", outF);
+#endif
 	}
+
+#ifdef DO_DECYRPT
+	fputs("\n\n\n\n*MAINMAP 1*\n", outF);
+	for (y = 0; y < 300; y++)
+	{
+		for (x = 0; x < 14; x++)
+		{
+			if (megaData1.mainmap[y][x] != NULL) {
+				fprintf(outF, "%*d ", 3, *megaData1.mainmap[y][x]);
+			}
+			else {
+				fputs("    ", outF);
+			}
+		}
+		fputs("\n", outF);
+	}
+	fputs("\n\n\n\n*MAINMAP 2*\n", outF);
+	for (y = 0; y < 300; y++)
+	{
+		for (x = 0; x < 14; x++)
+		{
+			if (megaData2.mainmap[y][x] != NULL) {
+				fprintf(outF, "%*d ", 3, *megaData2.mainmap[y][x]);
+			}
+			else {
+				fputs("    ", outF);
+			}
+		}
+		fputs("\n", outF);
+	}
+	fputs("\n\n\n\n*MAINMAP 3*\n", outF);
+	for (y = 0; y < 300; y++)
+	{
+		for (x = 0; x < 14; x++)
+		{
+			if (megaData3.mainmap[y][x] != NULL) {
+				fprintf(outF, "%*d ", 3, *megaData3.mainmap[y][x]);
+			}
+			else {
+				fputs("    ", outF);
+			}
+		}
+		fputs("\n", outF);
+	}
+	fclose(outF);
+#endif
 
 	fclose(level_f);
 
@@ -3320,6 +3441,9 @@ bool titleScreen(void)
 
 				fade_palette(colors, 10, 0, 255 - 16);
 			}
+
+			// Draw "Reloaded" title
+			JE_dString(VGAScreen, 150, 80, "RELOADED", FONT_SHAPES); // reloaded logo/text
 
 			// Draw menu items.
 			for (size_t i = 0; i < COUNTOF(menuText); ++i)
@@ -3644,7 +3768,11 @@ bool newGame(void)
 
 bool newSuperArcadeGame(unsigned int i)
 {
-	player[0].items.ship = SAShip[i];
+	tempItemType = ItemType_Ship;
+	tempI = (int)SAShip[i];
+	temp = 0;
+	get_item_index_from_int(&tempItemType, &tempI, &temp);
+	player[0].items.ship = temp;
 
 	if (episodeSelect() && difficultySelect())
 	{
@@ -3670,12 +3798,22 @@ bool newSuperArcadeGame(unsigned int i)
 
 		player[0].cash = 0;
 
-		player[0].items.weapon[FRONT_WEAPON].id = SAWeapon[i][0];
-		player[0].items.special = SASpecialWeapon[i];
+		tempItemType = ItemType_WeaponFront;
+		tempI = (int)SAWeapon[i][0];
+		temp = 0;
+		get_item_index_from_int(&tempItemType, &tempI, &temp);
+		player[0].items.weapon[FRONT_WEAPON].id = temp;
+		tempItemType = ItemType_Special;
+		tempI = (int)SASpecialWeapon[i];
+		temp = 0;
+		get_item_index_from_int(&tempItemType, &tempI, &temp);
+		player[0].items.special = temp;
 		if (superArcadeMode == SA_NORTSHIPZ)
 		{
-			for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i)
-				player[0].items.sidekick[i] = 24;  // Companion Ship Quicksilver
+			for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i) {
+				tempItemType = i == 0 ? ItemType_SidekickLeft : ItemType_SidekickRight;
+				player[0].items.sidekick[i] = item_idx(&tempItemType, "24"); // Companion Ship Quicksilver
+			}
 		}
 
 		fade_black(10);
@@ -3723,8 +3861,10 @@ void newSuperTyrianGame(void)
 
 	player[0].cash = 0;
 
-	player[0].items.ship = 13;                     // The Stalker 21.126
-	player[0].items.weapon[FRONT_WEAPON].id = 39;  // Atomic RailGun
+	tempItemType = ItemType_Ship;
+	player[0].items.ship = item_idx(&tempItemType, "13"); // The Stalker 21.126
+	tempItemType = ItemType_WeaponFront;
+	player[0].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, "39"); // Atomic RailGun
 
 	fade_black(10);
 }

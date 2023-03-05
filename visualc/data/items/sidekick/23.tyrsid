@@ -1,0 +1,17 @@
+id=23
+name=Protron Cannon Indigo         
+itemgraphic=237
+pwr=0
+cost=12000
+tr=2
+option=1
+opspd=3
+ani=1
+gr=45 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+wport=16
+wpnum=730
+ammo=0
+stop=1
+icongr=2
+position=0
+probability=9

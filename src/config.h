@@ -163,6 +163,7 @@ extern JE_byte processorType;
 extern JE_SaveFilesType saveFiles;
 extern JE_SaveGameTemp saveTemp;
 extern JE_word editorLevel;
+extern int shopContentSetting;
 
 extern Config opentyrian_config;
 
@@ -172,6 +173,8 @@ const char *get_user_directory(void);
 void JE_loadConfiguration(void);
 void JE_saveConfiguration(void);
 
+extern void saveGameOperation(const char* name);
+extern bool loadGameOperation(const char* name);
 void JE_saveGame(JE_byte slot, const char *name);
 void JE_loadGame(JE_byte slot);
 

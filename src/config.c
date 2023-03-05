@@ -242,6 +242,8 @@ JE_SaveGameTemp saveTemp;
 
 JE_word editorLevel;   /*Initial value 800*/
 
+int shopContentSetting;
+
 Config opentyrian_config;  // implicitly initialized
 
 bool load_opentyrian_config(void)
@@ -250,6 +252,7 @@ bool load_opentyrian_config(void)
 	fullscreen_display = -1;
 	set_scaler_by_name("Scale2x");
 	memcpy(keySettings, defaultKeySettings, sizeof(keySettings));
+	shopContentSetting = 0;
 	
 	Config *config = &opentyrian_config;
 	
@@ -295,6 +298,12 @@ bool load_opentyrian_config(void)
 		}
 	}
 
+	section = config_find_section(config, "gameplay", NULL);
+	if (section != NULL)
+	{
+		config_get_int_option(section, "shop_content", &shopContentSetting);
+	}
+
 	fclose(file);
 	
 	return true;
@@ -327,6 +336,12 @@ bool save_opentyrian_config(void)
 			keyName = NULL;
 		config_set_string_option(section, keySettingNames[i], keyName);
 	}
+
+	section = config_find_or_add_section(config, "gameplay", NULL);
+	if (section == NULL)
+		exit(EXIT_FAILURE);  // out of memory
+
+	config_set_int_option(section, "shop_content", shopContentSetting);
 
 #ifndef TARGET_WIN32
 	mkdir(get_user_directory(), 0700);
@@ -379,6 +394,214 @@ static void pitems_to_playeritems(PlayerItems *items, JE_PItemsType pItems, JE_b
 	items->shield                   = pItems[9];
 	items->special                  = pItems[10];
 	items->ship                     = pItems[11];
+}
+
+void saveGameOperation(const char* name) {
+	char filename[60];
+	snprintf(filename, sizeof(filename), "saves\\%s.tyrsav", name);
+	FILE* outF = dir_fopen(get_user_directory(), filename, "w");
+	fprintf(outF, "difficulty=%d\n", difficultyLevel);
+	fprintf(outF, "episode=%d\n", episodeNum);
+	fprintf(outF, "level=%d\n", saveLevel);
+	fprintf(outF, "initdifficulty=%d\n", initialDifficulty);
+	fprintf(outF, "initepisode=%d\n", initial_episode_num);
+	fprintf(outF, "cubes=%d\n", lastCubeMax);
+	fprintf(outF, "repeated=%d\n", (gameHasRepeated ? 1 : 0));
+	for (int p = 0; p < (twoPlayerMode ? 2 : 1); p++) {
+		fprintf(outF, "p%dship=%s\n", p, ships[player[p].items.ship].id);
+		fprintf(outF, "p%dweaponfront=%s\n", p, weaponPort[player[p].items.weapon[FRONT_WEAPON].id].id);
+		fprintf(outF, "p%dweaponfrontpwr=%d\n", p, player[p].items.weapon[FRONT_WEAPON].power);
+		fprintf(outF, "p%dweaponrear=%s\n", p, weaponPort[player[p].items.weapon[REAR_WEAPON].id].id);
+		fprintf(outF, "p%dweaponrearpwr=%d\n", p, player[p].items.weapon[REAR_WEAPON].power);
+		fprintf(outF, "p%dgenerator=%s\n", p, powerSys[player[p].items.generator].id);
+		fprintf(outF, "p%dshield=%s\n", p, shields[player[p].items.shield].id);
+		fprintf(outF, "p%dsidekickleft=%s\n", p, options[player[p].items.sidekick[0]].id);
+		fprintf(outF, "p%dsidekickright=%s\n", p, options[player[p].items.sidekick[1]].id);
+		fprintf(outF, "p%dspecial=%s\n", p, special[player[p].items.special].id);
+		fprintf(outF, "p%dcash=%lu\n", p, player[p].cash);
+
+		fprintf(outF, "p%dlship=%s\n", p, ships[player[p].last_items.ship].id);
+		fprintf(outF, "p%dlweaponfront=%s\n", p, weaponPort[player[p].last_items.weapon[FRONT_WEAPON].id].id);
+		fprintf(outF, "p%dlweaponrear=%s\n", p, weaponPort[player[p].last_items.weapon[REAR_WEAPON].id].id);
+		fprintf(outF, "p%dlgenerator=%s\n", p, powerSys[player[p].last_items.generator].id);
+		fprintf(outF, "p%dlshield=%s\n", p, shields[player[p].last_items.shield].id);
+		fprintf(outF, "p%dlsidekickleft=%s\n", p, options[player[p].last_items.sidekick[0]].id);
+		fprintf(outF, "p%dlsidekickright=%s\n", p, options[player[p].last_items.sidekick[1]].id);
+	}
+	fclose(outF);
+}
+
+bool loadGameOperation(const char* name) {
+	char filename[60];
+	snprintf(filename, sizeof(filename), "saves\\%s.tyrsav", name);
+	FILE* file = dir_fopen(get_user_directory(), filename, "r");
+	if (file == NULL) return false;
+
+	superTyrian = false;
+	onePlayerAction = false;
+	twoPlayerMode = false;
+	extraGame = false;
+	galagaMode = false;
+
+	size_t buffer_cap = 128;
+	char* buffer = malloc(buffer_cap * sizeof(char));
+	if (buffer == NULL) exit(1); // TODO: Error handling
+	size_t buffer_end = 1;
+	buffer[buffer_end - 1] = '\0';
+
+	for (size_t line = 0, next_line = 0; ; line = next_line)
+	{
+		char first_char = '\0';
+		/* find beginning of next line */
+		while (next_line < buffer_end)
+		{
+			char c = buffer[next_line];
+			if (first_char == '\0') first_char = buffer[next_line];
+
+			if (c == '\0' && next_line == buffer_end - 1)
+			{
+				if (line > 0)
+				{
+					/* shift to front */
+					memmove(&buffer[0], &buffer[line], buffer_end - line);
+					buffer_end -= line;
+					next_line -= line;
+					line = 0;
+				}
+				else if (buffer_end > 1)
+				{
+					/* need larger capacity */
+					buffer_cap *= 2;
+					char* new_buffer = realloc(buffer, buffer_cap * sizeof(char));
+					if (new_buffer == NULL) exit(1); // TODO: Error handling
+					buffer = new_buffer;
+				}
+
+				size_t read = fread(&buffer[buffer_end - 1], sizeof(char), buffer_cap - buffer_end, file);
+				if (read == 0)
+					break;
+
+				buffer_end += read;
+				buffer[buffer_end - 1] = '\0';
+			}
+			else
+			{
+				++next_line;
+
+				if (c == '\n' || c == '\r')
+				{
+					break;
+				}
+			}
+		}
+
+		/* if at end of file */
+		if (next_line == line)
+			break;
+
+		size_t i = line;
+
+		assert(i <= next_line);
+
+		char key[30] = "";
+		char value[255] = "";
+
+		parse_value_pair(buffer, &i, key, value);
+
+		if (strcmp(key, "difficulty") == 0) {
+			difficultyLevel = atoi(value);
+		}
+		else if (strcmp(key, "episode") == 0) {
+			episodeNum = atoi(value);
+		}
+		else if (strcmp(key, "level") == 0) {
+			mainLevel = atoi(value);
+		}
+		else if (strcmp(key, "initdifficulty") == 0) {
+			initialDifficulty = atoi(value);
+		}
+		else if (strcmp(key, "initepisode") == 0) {
+			initial_episode_num = atoi(value);
+		}
+		else if (strcmp(key, "cubes") == 0) {
+			cubeMax = atoi(value);
+		}
+		else if (strcmp(key, "repeated") == 0) {
+			gameHasRepeated = (atoi(value) == 0 ? false : true);
+		}
+		else if (strcmp(key, "p0ship") == 0 || strcmp(key, "p1ship") == 0 || strcmp(key, "p0lship") == 0 || strcmp(key, "p1lship") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_Ship;
+			if(!isLastItem) player[p].items.ship = item_idx(&tempItemType, value);
+				else player[p].last_items.ship = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0weaponfront") == 0 || strcmp(key, "p1weaponfront") == 0 || strcmp(key, "p0lweaponfront") == 0 || strcmp(key, "p1lweaponfront") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_WeaponFront;
+			if(!isLastItem) player[p].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, value);
+				else player[p].last_items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0weaponfrontpwr") == 0 || strcmp(key, "p1weaponfrontpwr") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			player[p].items.weapon[FRONT_WEAPON].power = atoi(value);
+		}
+		else if (strcmp(key, "p0weaponrear") == 0 || strcmp(key, "p1weaponrear") == 0 || strcmp(key, "p0lweaponrear") == 0 || strcmp(key, "p1lweaponrear") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_WeaponRear;
+			if(!isLastItem) player[p].items.weapon[REAR_WEAPON].id = item_idx(&tempItemType, value);
+				else player[p].last_items.weapon[REAR_WEAPON].id = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0weaponrearpwr") == 0 || strcmp(key, "p1weaponrearpwr") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			player[p].items.weapon[REAR_WEAPON].power = atoi(value);
+		}
+		else if (strcmp(key, "p0generator") == 0 || strcmp(key, "p1generator") == 0 || strcmp(key, "p0lgenerator") == 0 || strcmp(key, "p1lgenerator") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_Generator;
+			if (!isLastItem) player[p].items.generator = item_idx(&tempItemType, value);
+			else player[p].last_items.generator = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0shield") == 0 || strcmp(key, "p1shield") == 0 || strcmp(key, "p0lshield") == 0 || strcmp(key, "p1lshield") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_Shield;
+			if (!isLastItem) player[p].items.shield = item_idx(&tempItemType, value);
+			else player[p].last_items.shield = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0sidekickleft") == 0 || strcmp(key, "p1sidekickleft") == 0 || strcmp(key, "p0lsidekickleft") == 0 || strcmp(key, "p1lsidekickleft") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_SidekickLeft;
+			if (!isLastItem) player[p].items.sidekick[0] = item_idx(&tempItemType, value);
+			else player[p].last_items.sidekick[0] = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0sidekickright") == 0 || strcmp(key, "p1sidekickright") == 0 || strcmp(key, "p0lsidekickright") == 0 || strcmp(key, "p1lsidekickright") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			bool isLastItem = key[2] == 'l';
+			tempItemType = ItemType_SidekickRight;
+			if (!isLastItem) player[p].items.sidekick[1] = item_idx(&tempItemType, value);
+			else player[p].last_items.sidekick[1] = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0special") == 0 || strcmp(key, "p1special") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			tempItemType = ItemType_Special;
+			player[p].items.special = item_idx(&tempItemType, value);
+		}
+		else if (strcmp(key, "p0cash") == 0 || strcmp(key, "p1cash") == 0) {
+			int p = key[1] == '0' ? 0 : 1;
+			player[p].cash = atoi(value);
+		}
+
+		first_char = '\0';
+	}
+
+	free(buffer);
+
+	return true;
 }
 
 void JE_saveGame(JE_byte slot, const char *name)
