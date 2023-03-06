@@ -166,6 +166,7 @@ extern JE_word editorLevel;
 extern int shopContentSetting;
 
 extern Config opentyrian_config;
+char*xor (char* string, const char* key);
 
 void JE_initProcessorType(void);
 void JE_setNewGameSpeed(void);
@@ -173,7 +174,7 @@ const char *get_user_directory(void);
 void JE_loadConfiguration(void);
 void JE_saveConfiguration(void);
 
-extern void saveGameOperation(const char* name);
+extern bool saveGameOperation(const char* name);
 extern bool loadGameOperation(const char* name);
 void JE_saveGame(JE_byte slot, const char *name);
 void JE_loadGame(JE_byte slot);

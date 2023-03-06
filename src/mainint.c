@@ -384,16 +384,11 @@ void saveLoadGameScreen(bool isSave)
 	}
 
 	wait_noinput(false, true, false);
-	//JE_clr256(VGAScreen);
-	//JE_showVGA();
-	memcpy(colors, palettes[0], sizeof(colors));
 	{
 		/* Enter Thy name */
 		JE_byte flash = 8 * 16 + 10;
-		JE_boolean fadein = true;
 		JE_boolean quit = false, cancel = false;
 		char stemp[30], tempstr[30];
-		//char buffer[256];
 
 		strcpy(stemp, "                             ");
 		temp = 0;
@@ -432,11 +427,6 @@ void saveLoadGameScreen(bool isSave)
 
 					JE_mouseStart();
 					JE_showVGA();
-					if (fadein)
-					{
-						fade_palette(colors, 15, 0, 255);
-						fadein = false;
-					}
 					JE_mouseReplace();
 
 					push_joysticks_as_keyboard();
