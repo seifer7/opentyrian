@@ -84,6 +84,31 @@ bool str_pop_int(char* str, int* val)
 	return success;
 }
 
+bool str_pop_str(char* str, char* val)
+{
+	bool success = false;
+
+	char buf[256];
+	assert(strlen(str) < sizeof(buf));
+
+	// grab the value from str
+	int end = 0;
+	while (str[end] != ' ' && str[end] != '\0')
+		end++;
+	memcpy(val, str, end);
+	val[end] = '\0';
+
+	if (str[0] != '\0')
+	{
+		success = true;
+
+		// shift the rest to the beginning
+		memcpy(str, str+end+1, strlen(str));
+	}
+
+	return success;
+}
+
 static size_t getShopContentsPickerItemsCount(void)
 {
 	return 3;
@@ -554,6 +579,7 @@ void setupMenu(void)
 				}
 				case SDL_SCANCODE_SPACE:
 				case SDL_SCANCODE_RETURN:
+				case SDL_SCANCODE_KP_ENTER:
 				{
 					action = true;
 					break;
@@ -769,6 +795,7 @@ void setupMenu(void)
 				}
 				case SDL_SCANCODE_SPACE:
 				case SDL_SCANCODE_RETURN:
+				case SDL_SCANCODE_KP_ENTER:
 				{
 					action = true;
 					break;

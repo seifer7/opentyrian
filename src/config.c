@@ -16,10 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+#pragma warning(disable : 5105)
+
 #include "config.h"
 
 #include "episodes.h"
 #include "file.h"
+#include "tinydir.h"
 #include "joystick.h"
 #include "loudness.h"
 #include "mtrand.h"
@@ -761,6 +764,77 @@ void JE_saveGame(JE_byte slot, const char *name)
 	}
 	
 	JE_saveConfiguration();
+}
+
+bool read_savegame_metadata(TCHAR *filename, SavedGame* saved_game) {
+	char magicBytes[5] = { 0x54, 0x59, 0x52, 0x52, '\0' }; // TYRR
+	char magicBytesFound[5] = { '\0' };
+	JE_word saveFormatVersion;
+	JE_word compatSaveFormatVersion;
+
+	memcpy(saved_game->name, filename, min(sizeof(saved_game->name) - 1,strlen(filename) - 7));
+
+	char filepath[60];
+	snprintf(filepath, sizeof(filepath), "saves\\%s", filename);
+	FILE* file = dir_fopen(get_user_directory(), filepath, "rb");
+	if (file == NULL) return false;
+
+	fread(magicBytesFound, sizeof(magicBytesFound) - 1, 1, file);
+	fread_u16_die(&saveFormatVersion, 1, file);
+	fread_u16_die(&compatSaveFormatVersion, 1, file);
+
+	if (strcmp(magicBytes, magicBytesFound) != 0) {
+		return false;
+	}
+
+	if (saveFormatVersion == 1 || compatSaveFormatVersion == 1) {
+		fseek(file, sizeof(JE_shortint), SEEK_CUR);
+		fread_u8_die(&saved_game->episode, 1, file);
+		fseek(file, sizeof(JE_byte), SEEK_CUR);
+		fseek(file, sizeof(JE_shortint), SEEK_CUR);
+		fseek(file, sizeof(JE_byte), SEEK_CUR);
+		fseek(file, sizeof(JE_word), SEEK_CUR);
+		fseek(file, sizeof(JE_byte), SEEK_CUR);
+		fseek(file, sizeof(char) * 128, SEEK_CUR);
+		fread_die(&saved_game->levelName, 11, 1, file);
+		saved_game->levelName[10] = '\0';
+		fread_u8_die(&saved_game->gameMode, 1, file);
+		fread_u8_die(&temp, 1, file);
+		saved_game->twoPlayerMode = temp == 2;
+	}
+
+	return true;
+}
+
+SavedGame* build_save_game_list(JE_byte players) {
+	int saveNum = 0;
+	tinydir_dir dir;
+	tinydir_open_sorted(&dir, TINYDIR_STRING("./saves"));
+	SavedGame* output_saved_games = calloc(dir.n_files, sizeof(SavedGame));
+
+	for (size_t i = 0; i < dir.n_files; i++)
+	{
+		tinydir_file file;
+		if (tinydir_readfile_n(&dir, &file, i) == -1) continue; // Failed to get access to file
+		if (file.is_dir) continue;
+		if (_tinydir_strcmp("tyrsav", file.extension) != 0) continue;
+
+		bool success = read_savegame_metadata(file.name, &output_saved_games[saveNum]);
+		if (!success) continue;
+		if (
+			(players == 1 && output_saved_games[saveNum].twoPlayerMode == true) ||
+			(players == 2 && output_saved_games[saveNum].twoPlayerMode == false)
+			) {
+			memset(&output_saved_games[saveNum], 0, sizeof(SavedGame));
+			continue;
+		}
+
+		saveNum++;
+	}
+
+	output_saved_games->count = saveNum;
+
+	return output_saved_games;
 }
 
 void JE_loadGame(JE_byte slot)

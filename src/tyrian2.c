@@ -362,8 +362,11 @@ enemy_still_exists:
 				if (enemy[i].freq[j-1])
 				{
 					temp3 = enemy[i].tur[j-1];
+					tempI = (int)enemy[i].tur[j - 1];
+					tempItemType = ItemType_Shot;
+					get_item_index_from_int(&tempItemType, &tempI, &tempI2);
 
-					if (--enemy[i].eshotwait[j-1] == 0 && temp3)
+					if (--enemy[i].eshotwait[j-1] == 0 && tempI2)
 					{
 						enemy[i].eshotwait[j-1] = enemy[i].freq[j-1];
 						if (difficultyLevel > DIFFICULTY_NORMAL)
@@ -376,6 +379,7 @@ enemy_still_exists:
 						if (galagaMode && (enemy[i].eyc == 0 || (mt_rand() % 400) >= galagaShotFreq))
 							goto draw_enemy_end;
 
+						// TODO: Kane - When new map format is implemented using string IDs instead of ints the switch below will need updating.
 						switch (temp3)
 						{
 						case 252: /* Savara Boss DualMissile */
@@ -428,7 +432,7 @@ enemy_still_exists:
 							break;
 						default:
 						/*Rot*/
-							for (int tempCount = weapons[temp3].multi; tempCount > 0; tempCount--)
+							for (int tempCount = weapons[tempI2].multi; tempCount > 0; tempCount--)
 							{
 								for (b = 0; b < ENEMY_SHOT_MAX; b++)
 								{
@@ -440,19 +444,19 @@ enemy_still_exists:
 
 								enemyShotAvail[b] = !enemyShotAvail[b];
 
-								if (weapons[temp3].sound > 0)
+								if (weapons[tempI2].sound > 0)
 								{
 									do
 									{
 										temp = mt_rand() % 8;
 									} while (temp == 3);
-									soundQueue[temp] = weapons[temp3].sound;
+									soundQueue[temp] = weapons[tempI2].sound;
 								}
 
 								if (enemy[i].aniactive == 2)
 									enemy[i].aniactive = 1;
 
-								if (++enemy[i].eshotmultipos[j-1] > weapons[temp3].max)
+								if (++enemy[i].eshotmultipos[j-1] > weapons[tempI2].max)
 									enemy[i].eshotmultipos[j-1] = 1;
 
 								int tempPos = enemy[i].eshotmultipos[j-1] - 1;
@@ -460,44 +464,44 @@ enemy_still_exists:
 								if (j == 1)
 									temp2 = 4;
 
-								enemyShot[b].sx = tempX + weapons[temp3].bx[tempPos] + tempMapXOfs;
-								enemyShot[b].sy = tempY + weapons[temp3].by[tempPos];
-								enemyShot[b].sdmg = weapons[temp3].attack[tempPos];
-								enemyShot[b].tx = weapons[temp3].tx;
-								enemyShot[b].ty = weapons[temp3].ty;
-								enemyShot[b].duration = weapons[temp3].del[tempPos];
+								enemyShot[b].sx = tempX + weapons[tempI2].bx[tempPos] + tempMapXOfs;
+								enemyShot[b].sy = tempY + weapons[tempI2].by[tempPos];
+								enemyShot[b].sdmg = weapons[tempI2].attack[tempPos];
+								enemyShot[b].tx = weapons[tempI2].tx;
+								enemyShot[b].ty = weapons[tempI2].ty;
+								enemyShot[b].duration = weapons[tempI2].del[tempPos];
 								enemyShot[b].animate = 0;
-								enemyShot[b].animax = weapons[temp3].weapani;
+								enemyShot[b].animax = weapons[tempI2].weapani;
 
-								enemyShot[b].sgr = weapons[temp3].sg[tempPos];
+								enemyShot[b].sgr = weapons[tempI2].sg[tempPos];
 								switch (j)
 								{
 								case 1:
-									enemyShot[b].syc = weapons[temp3].acceleration;
-									enemyShot[b].sxc = weapons[temp3].accelerationx;
+									enemyShot[b].syc = weapons[tempI2].acceleration;
+									enemyShot[b].sxc = weapons[tempI2].accelerationx;
 
-									enemyShot[b].sxm = weapons[temp3].sx[tempPos];
-									enemyShot[b].sym = weapons[temp3].sy[tempPos];
+									enemyShot[b].sxm = weapons[tempI2].sx[tempPos];
+									enemyShot[b].sym = weapons[tempI2].sy[tempPos];
 									break;
 								case 3:
-									enemyShot[b].sxc = -weapons[temp3].acceleration;
-									enemyShot[b].syc = weapons[temp3].accelerationx;
+									enemyShot[b].sxc = -weapons[tempI2].acceleration;
+									enemyShot[b].syc = weapons[tempI2].accelerationx;
 
-									enemyShot[b].sxm = -weapons[temp3].sy[tempPos];
-									enemyShot[b].sym = -weapons[temp3].sx[tempPos];
+									enemyShot[b].sxm = -weapons[tempI2].sy[tempPos];
+									enemyShot[b].sym = -weapons[tempI2].sx[tempPos];
 									break;
 								case 2:
-									enemyShot[b].sxc = weapons[temp3].acceleration;
-									enemyShot[b].syc = -weapons[temp3].acceleration;
+									enemyShot[b].sxc = weapons[tempI2].acceleration;
+									enemyShot[b].syc = -weapons[tempI2].acceleration;
 
-									enemyShot[b].sxm = weapons[temp3].sy[tempPos];
-									enemyShot[b].sym = -weapons[temp3].sx[tempPos];
+									enemyShot[b].sxm = weapons[tempI2].sy[tempPos];
+									enemyShot[b].sym = -weapons[tempI2].sx[tempPos];
 									break;
 								}
 
-								if (weapons[temp3].aim > 0)
+								if (weapons[tempI2].aim > 0)
 								{
-									int aim = weapons[temp3].aim;
+									int aim = weapons[tempI2].aim;
 
 									/*DIF*/
 									if (difficultyLevel > DIFFICULTY_NORMAL)
@@ -1437,7 +1441,7 @@ level_loop:
 		{
 			bool is_special = false;
 			int tempShotX = 0, tempShotY = 0;
-			JE_byte chain;
+			JE_word chain;
 			JE_byte playerNum;
 			JE_word tempX2, tempY2;
 			JE_integer damage;
@@ -2289,14 +2293,10 @@ draw_player_shot_loop_end:
 				}
 				if (requests & 8) // nortship
 				{
-					tempItemType = ItemType_Ship;
-					player[0].items.ship = item_idx(&tempItemType, "12"); // Nort Ship
-					tempItemType = ItemType_Special;
-					player[0].items.special = item_idx(&tempItemType, "13"); // Astral Zone
-					tempItemType = ItemType_WeaponFront;
-					player[0].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, "36"); // NortShip Super Pulse
-					tempItemType = ItemType_WeaponRear;
-					player[0].items.weapon[REAR_WEAPON].id = item_idx(&tempItemType, "37"); // NortShip Spreader
+					player[0].items.ship = ITEM_INDEX_STORE[ITEM_SHIP_NORTSHIP]; // Nort Ship
+					player[0].items.special = ITEM_INDEX_STORE[ITEM_SPECIAL_ASTRALZONE]; // Astral Zone
+					player[0].items.weapon[FRONT_WEAPON].id = ITEM_INDEX_STORE[ITEM_WEAPONFRONT_NORTSHIPSUPERPULSE]; // NortShip Super Pulse
+					player[0].items.weapon[REAR_WEAPON].id = ITEM_INDEX_STORE[ITEM_WEAPONREAR_NORTSHIPSPREADER]; // NortShip Spreader
 					shipGr = 1;
 				}
 
@@ -2507,8 +2507,7 @@ new_game:
 						galagaMode = true;   /*GALAGA mode*/
 
 						player[1].items = player[0].items;
-						tempItemType = ItemType_WeaponRear;
-						player[1].items.weapon[REAR_WEAPON].id = item_idx(&tempItemType, "15"); // Vulcan Cannon
+						player[1].items.weapon[REAR_WEAPON].id = ITEM_INDEX_STORE[ITEM_WEAPONREAR_VULCANCANNON]; // Vulcan Cannon
 						for (uint i = 0; i < COUNTOF(player[1].items.sidekick); ++i)
 							player[1].items.sidekick[i] = 0;          // None
 						break;
@@ -2526,17 +2525,13 @@ new_game:
 
 						player[0].cash = 0;
 
-						tempItemType = ItemType_Ship;
-						player[0].items.ship = item_idx(&tempItemType, "13"); // The Stalker 21.126
-						tempItemType = ItemType_WeaponFront;
-						player[0].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, "39"); // Atomic RailGun
+						player[0].items.ship = ITEM_INDEX_STORE[ITEM_SHIP_STALKER21126]; // The Stalker 21.126
+						player[0].items.weapon[FRONT_WEAPON].id = ITEM_INDEX_STORE[ITEM_WEAPONFRONT_ATOMICRAILGUN]; // Atomic RailGun
 						player[0].items.weapon[REAR_WEAPON].id = 0;    // None
 						for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i)
 							player[0].items.sidekick[i] = 0;           // None
-						tempItemType = ItemType_Generator;
-						player[0].items.generator = item_idx(&tempItemType, "2"); // Advanced MR-12
-						tempItemType = ItemType_Shield;
-						player[0].items.shield = item_idx(&tempItemType, "4"); // Advanced Integrity Field
+						player[0].items.generator = ITEM_INDEX_STORE[ITEM_GENERATOR_ADVANCEDMR12]; // Advanced MR-12
+						player[0].items.shield = ITEM_INDEX_STORE[ITEM_SHIELD_ADVANCEDINTEGRITYFIELD]; // Advanced Integrity Field
 						player[0].items.special = 0;                   // None
 
 						player[0].items.weapon[FRONT_WEAPON].power = 3;
@@ -2560,7 +2555,7 @@ new_game:
 
 					case 'w':  // Stalker 21.126 section jump
 						temp = atoi(s + 3);   /*Allowed to go to Time War?*/
-						if (player[0].items.ship == 13)
+						if (player[0].items.ship == ITEM_INDEX_STORE[ITEM_SHIP_STALKER21126])
 						{
 							mainLevel = temp;
 							jumpSection = true;
@@ -2627,7 +2622,10 @@ new_game:
 							int j = 0, temp;
 							if (shopContentSetting < 2) {
 								while (str_pop_int(buf, &temp))
-									get_item_index_from_int(&storeItemTypes[i], &temp, &itemAvail[i][j++]);
+								{
+									get_item_index_from_int(&storeItemTypes[i], &temp, &tempI);
+									itemAvail[i][j++] = tempI;
+								}
 							}
 							if (shopContentSetting > 0 && j < 5) {
 								for (; ; ) {
@@ -3361,7 +3359,7 @@ void networkStartScreen(void)
 	for (uint i = 0; i < COUNTOF(player); ++i)
 		player[i].cash = 0;
 
-	player[0].items.ship = 11;  // Silver Ship
+	player[0].items.ship = ITEM_INDEX_STORE[ITEM_SHIP_SILVERSHIP]; // Silver Ship
 
 	while (!network_is_sync())
 	{
@@ -3576,6 +3574,7 @@ bool titleScreen(void)
 			}
 			case SDL_SCANCODE_SPACE:
 			case SDL_SCANCODE_RETURN:
+			case SDL_SCANCODE_KP_ENTER:
 			{
 				action = true;
 				break;
@@ -3734,14 +3733,14 @@ bool newGame(void)
 		{
 			player[0].cash = 0;
 
-			player[0].items.ship = 8;  // Stalker
+			player[0].items.ship = ITEM_INDEX_STORE[ITEM_SHIP_STALKER]; // Stalker
 		}
 		else if (twoPlayerMode)
 		{
 			for (uint i = 0; i < COUNTOF(player); ++i)
 				player[i].cash = 0;
 
-			player[0].items.ship = 11;  // Silver Ship
+			player[0].items.ship = ITEM_INDEX_STORE[ITEM_SHIP_SILVERSHIP]; // Silver Ship
 
 			difficultyLevel++;
 
@@ -3770,9 +3769,7 @@ bool newSuperArcadeGame(unsigned int i)
 {
 	tempItemType = ItemType_Ship;
 	tempI = (int)SAShip[i];
-	temp = 0;
-	get_item_index_from_int(&tempItemType, &tempI, &temp);
-	player[0].items.ship = temp;
+	player[0].items.ship = item_idx_from_int(&tempItemType, &tempI);
 
 	if (episodeSelect() && difficultySelect())
 	{
@@ -3800,20 +3797,14 @@ bool newSuperArcadeGame(unsigned int i)
 
 		tempItemType = ItemType_WeaponFront;
 		tempI = (int)SAWeapon[i][0];
-		temp = 0;
-		get_item_index_from_int(&tempItemType, &tempI, &temp);
-		player[0].items.weapon[FRONT_WEAPON].id = temp;
+		player[0].items.weapon[FRONT_WEAPON].id = item_idx_from_int(&tempItemType, &tempI);
 		tempItemType = ItemType_Special;
 		tempI = (int)SASpecialWeapon[i];
-		temp = 0;
-		get_item_index_from_int(&tempItemType, &tempI, &temp);
-		player[0].items.special = temp;
+		player[0].items.special = item_idx_from_int(&tempItemType, &tempI);
 		if (superArcadeMode == SA_NORTSHIPZ)
 		{
-			for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i) {
-				tempItemType = i == 0 ? ItemType_SidekickLeft : ItemType_SidekickRight;
-				player[0].items.sidekick[i] = item_idx(&tempItemType, "24"); // Companion Ship Quicksilver
-			}
+			for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i) 
+				player[0].items.sidekick[i] = ITEM_INDEX_STORE[ITEM_SIDEKICK_COMPANIONSHIPQUICKSILVER]; // Companion Ship Quicksilver
 		}
 
 		fade_black(10);
@@ -3861,10 +3852,8 @@ void newSuperTyrianGame(void)
 
 	player[0].cash = 0;
 
-	tempItemType = ItemType_Ship;
-	player[0].items.ship = item_idx(&tempItemType, "13"); // The Stalker 21.126
-	tempItemType = ItemType_WeaponFront;
-	player[0].items.weapon[FRONT_WEAPON].id = item_idx(&tempItemType, "39"); // Atomic RailGun
+	player[0].items.ship = ITEM_INDEX_STORE[ITEM_SHIP_STALKER21126]; // The Stalker 21.126
+	player[0].items.weapon[FRONT_WEAPON].id = ITEM_INDEX_STORE[ITEM_WEAPONFRONT_ATOMICRAILGUN]; // Atomic RailGun
 
 	fade_black(10);
 }
@@ -5224,7 +5213,9 @@ void JE_eventSystem(void)
 		break;
 
 	case 82: /*Give SPECIAL WEAPON*/
-		player[0].items.special = eventRec[eventLoc-1].eventdat;
+		tempI = eventRec[eventLoc - 1].eventdat;
+		tempItemType = ItemType_Special;
+		player[0].items.special = item_idx_from_int(&tempItemType, &tempI);
 		shotMultiPos[SHOT_SPECIAL] = 0;
 		shotRepeat[SHOT_SPECIAL] = 0;
 		shotMultiPos[SHOT_SPECIAL2] = 0;

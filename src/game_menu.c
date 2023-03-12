@@ -79,6 +79,7 @@ static JE_word yLoc;
 static JE_shortint yChg;
 static int newPal, curPal, oldPal;
 static JE_boolean quikSave;
+static JE_integer saveGamePageIndex;
 static JE_byte oldMenu;
 static JE_boolean backFromHelp;
 static JE_integer lastDirection;
@@ -329,33 +330,37 @@ void JE_itemScreen(void)
 		/* load/save menu */
 		if (curMenu == MENU_LOAD_SAVE)
 		{
-			int min, max;
+			SavedGame* savedGames = build_save_game_list(twoPlayerMode ? 2 : 1);
 
-			if (twoPlayerMode)
-			{
-				min = 13;
-				max = 24;
-			}
-			else
-			{
-				min = 2;
-				max = 13;
-			}
+			int min = 2, max = 13;
 
 			for (int x = min; x <= max; x++)
 			{
+				SavedGame* saved_game = 0;
+				bool isSaveFile = true;
+				int tempY = 38 + (x - min) * 11;
 				/* Highlight if current selection */
 				temp2 = (x - min + 2 == curSel[curMenu]) ? 15 : 28;
 
-				/* Write save game slot */
-				if (x == max)
-					strcpy(tempStr, miscText[6-1]);
-				else if (saveFiles[x-2].level == 0)
-					strcpy(tempStr, miscText[3-1]);
-				else
-					strcpy(tempStr, saveFiles[x-2].name);
+				int saveGameIndex = (saveGamePageIndex * 10) + x - min - (performSave ? 1 : 0);
 
-				int tempY = 38 + (x - min)*11;
+				if (saveGameIndex < savedGames->count) {
+					saved_game = &savedGames[saveGameIndex];
+				}
+				else {
+					isSaveFile = false;
+				}
+
+				if (performSave && x == min) {
+					isSaveFile = false;
+					strcpy(tempStr, "Create New Save");
+				}
+				else if (x == max)
+					strcpy(tempStr, miscText[6-1]); // Return to previous menu
+				else if (!isSaveFile)
+					strcpy(tempStr, "");
+				else
+					strcpy(tempStr, saved_game->name);
 
 				JE_textShade(VGAScreen, 163, tempY, tempStr, temp2 / 16, temp2 % 16 - 8, DARKEN);
 
@@ -364,17 +369,17 @@ void JE_itemScreen(void)
 					/* Highlight if current selection */
 					temp2 = (x - min + 2 == curSel[curMenu]) ? 252 : 250;
 
-					if (saveFiles[x-2].level == 0)
+					if (!isSaveFile)
 					{
-						strcpy(tempStr, "-----"); /* Empty save slot */
+						strcpy(tempStr, ""); /* Empty save slot */
 					}
 					else
 					{
 						char buf[20];
 
-						strcpy(tempStr, saveFiles[x-2].levelName);
+						strcpy(tempStr, saved_game->levelName);
 
-						snprintf(buf, sizeof buf, "%s%d", miscTextB[1-1], saveFiles[x-2].episode);
+						snprintf(buf, sizeof buf, "%s%d", miscTextB[1-1], saved_game->episode);
 						JE_textShade(VGAScreen, 297, tempY, buf, temp2 / 16, temp2 % 16 - 8, DARKEN);
 					}
 
@@ -383,6 +388,7 @@ void JE_itemScreen(void)
 
 				JE_drawMenuHeader();
 			}
+			free(savedGames);
 		}
 
 		if (curMenu == MENU_KEYBOARD_CONFIG)
@@ -516,6 +522,21 @@ void JE_itemScreen(void)
 				/* Nothing else can be upgraded / downgraded */
 				leftPower = false;
 				rightPower = false;
+			}
+
+			if (curSel[MENU_UPGRADES] == 7) {
+				player[0].sidekick[LEFT_SIDEKICK].charge_ticks = 20;
+				player[0].sidekick[LEFT_SIDEKICK].charge = 0;
+				player[0].sidekick[LEFT_SIDEKICK].style = options[player[0].items.sidekick[LEFT_SIDEKICK]].tr;
+				player[0].sidekick[LEFT_SIDEKICK].animation_enabled = options[player[0].items.sidekick[LEFT_SIDEKICK]].ani > 1;
+				player[0].sidekick[LEFT_SIDEKICK].animation_frame = 0;
+			}
+			else if (curSel[MENU_UPGRADES] == 8) {
+				player[0].sidekick[RIGHT_SIDEKICK].charge_ticks = 20;
+				player[0].sidekick[RIGHT_SIDEKICK].charge = 0;
+				player[0].sidekick[RIGHT_SIDEKICK].style = options[player[0].items.sidekick[RIGHT_SIDEKICK]].tr;
+				player[0].sidekick[RIGHT_SIDEKICK].animation_enabled = options[player[0].items.sidekick[RIGHT_SIDEKICK]].ani > 1;
+				player[0].sidekick[RIGHT_SIDEKICK].animation_frame = 0;
 			}
 
 			/* submenu title  e.g., "Left Sidekick" */
@@ -995,6 +1016,7 @@ void JE_itemScreen(void)
 						quikSave = true;
 						oldMenu = curMenu;
 						curMenu = MENU_LOAD_SAVE;
+						saveGamePageIndex = 0;
 						performSave = true;
 						newPal = 1;
 						oldPal = curPal;
@@ -1009,6 +1031,7 @@ void JE_itemScreen(void)
 						quikSave = true;
 						oldMenu = curMenu;
 						curMenu = MENU_LOAD_SAVE;
+						saveGamePageIndex = 0;
 						performSave = false;
 						newPal = 1;
 						oldPal = curPal;
@@ -1276,6 +1299,7 @@ void JE_itemScreen(void)
 
 			case SDL_SCANCODE_SPACE:
 			case SDL_SCANCODE_RETURN:
+			case SDL_SCANCODE_KP_ENTER:
 				keyboardUsed = true;
 
 				// if front or rear weapon, update "Done" power level
@@ -1378,6 +1402,7 @@ void JE_itemScreen(void)
 					curSel[curMenu] = 3;
 				}
 
+				// TODO: Kane - Up/Down arrow needs to skip "empty slots" on save/load game menu
 				break;
 
 			case SDL_SCANCODE_DOWN:
@@ -1409,6 +1434,7 @@ void JE_itemScreen(void)
 					curSel[curMenu] = 6;
 				}
 
+				// TODO: Kane - Up/Down arrow needs to skip "empty slots" on save/load game menu
 				break;
 
 			case SDL_SCANCODE_HOME:
@@ -1517,6 +1543,8 @@ void JE_itemScreen(void)
 					}
 					break;
 				}
+				
+				// TODO: Kane - Add case for load/save game menu for left/right arrow to increment saveGamePageIndex variable.
 				break;
 
 			case SDL_SCANCODE_RIGHT:
@@ -1610,6 +1638,8 @@ void JE_itemScreen(void)
 					}
 					break;
 				}
+
+				// TODO: Kane - Add case for load/save game menu for left/right arrow to increment saveGamePageIndex variable.
 				break;
 
 			default:
@@ -1677,7 +1707,7 @@ void draw_ship_illustration(void)
 			ship = &ships[player[0].items.ship];
 		}
 		else {
-			JE_byte defaultShipIndex = 0;
+			int defaultShipIndex = 0;
 			get_item_index(&tempItemType, "1", &defaultShipIndex);
 			ship = &ships[defaultShipIndex];
 		}
@@ -2433,6 +2463,7 @@ JE_boolean JE_quitRequest(void)
 					JE_playSampleNum(S_CURSOR);
 					break;
 				case SDL_SCANCODE_RETURN:
+				case SDL_SCANCODE_KP_ENTER:
 				case SDL_SCANCODE_SPACE:
 					done = true;
 					break;
@@ -2608,16 +2639,16 @@ void JE_menuFunction(JE_byte select)
 		switch (select)
 		{
 		case 2:
-			//curMenu = MENU_LOAD_SAVE;
-			//performSave = false;
-			//quikSave = false;
-			saveLoadGameScreen(false);
+			curMenu = MENU_LOAD_SAVE;
+			performSave = false;
+			quikSave = false;
+			saveGamePageIndex = 0;
 			break;
 		case 3:
-			//curMenu = MENU_LOAD_SAVE;
-			//performSave = true;
-			//quikSave = false;
-			saveLoadGameScreen(true);
+			curMenu = MENU_LOAD_SAVE;
+			performSave = true;
+			quikSave = false;
+			saveGamePageIndex = 0;
 			break;
 		case 6:
 			curMenu = MENU_JOYSTICK_CONFIG;
@@ -2740,18 +2771,32 @@ void JE_menuFunction(JE_byte select)
 				curMenu = MENU_OPTIONS;
 			}
 		}
+		else if (performSave && curSelect == 2)
+		{
+			// Popup asking for save game name
+			saveGameNamePopup(true);
+		}
 		else
 		{
-			if (twoPlayerMode)
-				temp = 11;
-			else
-				temp = 0;
-			JE_operation(curSelect - 1 + temp);
+			SavedGame* savedGames = build_save_game_list(twoPlayerMode ? 2 : 1);
+			int saveGameIndex = (saveGamePageIndex * 10) + curSelect - 2 - (performSave ? 1 : 0);
+			if (saveGameIndex >= savedGames->count) {
+				// Invalid save
+			}
+			else {
+				if (performSave) {
+					saveGameOperation(savedGames[saveGameIndex].name);
+				}
+				else {
+					loadGameOperation(savedGames[saveGameIndex].name);
+				}
+			}
 			if (quikSave)
 			{
 				curMenu = oldMenu;
 				newPal = oldPal;
 			}
+			free(savedGames);
 		}
 		break;
 
@@ -2995,37 +3040,19 @@ void JE_drawShipSpecs(SDL_Surface * screen, SDL_Surface * temp_screen)
 	JE_outText(screen, JE_fontCenter(miscText[4], TINY_FONT), 190, miscText[4], 12, 2);
 
 	//now draw the green ship over that.
-	//This hardcoded stuff is for positioning our little ship graphic
-	if (player[0].items.ship > 90)
-	{
-		temp_index = 32;
-	}
-	else if (player[0].items.ship > 0)
+	if (player[0].items.ship > 0)
 	{
 		temp_index = ships[player[0].items.ship].bigshipgraphic;
+		temp_x = ships[player[0].items.ship].bigshipgraphx;
+		temp_y = ships[player[0].items.ship].bigshipgraphy;
 	}
 	else
 	{
 		temp_index = ships[old_items[0].ship].bigshipgraphic;
+		temp_x = ships[old_items[0].ship].bigshipgraphx;
+		temp_y = ships[old_items[0].ship].bigshipgraphy;
 	}
 
-	switch (temp_index)
-	{
-		case 32:
-			temp_x = 35;
-			temp_y = 33;
-			break;
-		case 28:
-			temp_x = 31;
-			temp_y = 36;
-			break;
-		case 33:
-			temp_x = 31;
-			temp_y = 35;
-			break;
-		default:
-			assert(0);
-	}
 	temp_x -= 30;
 
 	//draw the ship into our temp buffer.
@@ -3122,8 +3149,8 @@ void JE_weaponSimUpdate(void)
 
 		if ((curSel[MENU_UPGRADES] == 3 || curSel[MENU_UPGRADES] == 4)) {
 			int weaponType = (curSel[MENU_UPGRADES] == 3 ? FRONT_WEAPON : REAR_WEAPON);
-			JE_word opval = weaponPort[player[0].items.weapon[weaponType].id].op[0][temp-1];
-			sprintf(buf, "Shot: %d", opval);
+			char *wepval = weapons[weaponPort[player[0].items.weapon[weaponType].id].op[0][temp-1]].id;
+			sprintf(buf, "Shot: %s", wepval);
 			JE_outText(VGAScreen, 58, 127, buf, 15, 4);
 		}
 	}
@@ -3210,6 +3237,41 @@ void JE_weaponViewFrame(void)
 	}
 
 	simulate_player_shots();
+
+	// Draw sidekicks overtop of shots
+	for (uint i = 0; i < COUNTOF(player[0].sidekick); ++i)
+	{
+		if (player[0].items.sidekick[i] == 0) continue;
+		JE_OptionType* this_option = &options[player[0].items.sidekick[i]];
+
+		if (this_option->option > 0)
+		{
+			if (player[0].sidekick[i].animation_enabled)
+			{
+				if (++player[0].sidekick[i].animation_frame >= this_option->ani)
+				{
+					player[0].sidekick[i].animation_frame = 0;
+				}
+			}
+
+			const int x = player[0].sidekick[i].x,
+				y = player[0].sidekick[i].y;
+			const uint sprite = this_option->gr[player[0].sidekick[i].charge][player[0].sidekick[i].animation_frame];
+
+			if (player[0].sidekick[i].style == 1 || player[0].sidekick[i].style == 2)
+				blit_sprite2x2(VGAScreen, x - 6, y, spriteSheet10, sprite);
+			else
+				blit_sprite2(VGAScreen, x, y, spriteSheet9, sprite);
+		}
+		if (this_option->pwr > 0) {
+			if (--player[0].sidekick[i].charge_ticks == 0)
+			{
+				if (player[0].sidekick[i].charge < this_option->pwr)
+					++player[0].sidekick[i].charge;
+				player[0].sidekick[i].charge_ticks = 20;
+			}
+		}
+	}
 
 	blit_sprite(VGAScreenSeg, 0, 0, OPTION_SHAPES, 12); // upgrade interface
 

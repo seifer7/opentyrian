@@ -22,6 +22,7 @@
 #include "episodes.h"
 
 #include "config.h"
+#include "varz.h"
 #include "file.h"
 #include "tinydir.h"
 #include "lvllib.h"
@@ -32,7 +33,8 @@
 /* MAIN Weapons Data */
 JE_WeaponPortType *weaponPort;
 JE_WeaponPortTypeOld oldWeaponPort[PORT_NUM + 1];
-JE_WeaponType     weapons[WEAP_NUM + 1]; /* [0..weapnum] */
+JE_WeaponType     *weapons;
+JE_WeaponTypeOld     oldWeapons[WEAP_NUM + 1]; /* [0..weapnum] */
 
 /* Items */
 JE_PowerType   *powerSys;
@@ -181,54 +183,65 @@ bool add_random_shop_item(const enum ITEM_TYPE* item_type, JE_byte* itemAvail, i
 	return true;
 }
 
-size_t item_idx_from_jebyte(const enum ITEM_TYPE* item_type, const JE_byte* id) {
+int item_idx_from_jebyte(const enum ITEM_TYPE* item_type, const JE_byte* id) {
 	char c[11] = "";
 	sprintf(c, "%d", *id);
 	return item_idx(item_type, c);
 }
 
-size_t item_idx(const enum ITEM_TYPE* item_type, const char* id) {
-	JE_byte index = -1;
-	get_item_index(item_type, id, &index);
-	return (size_t) index;
+int item_idx_from_int(const enum ITEM_TYPE* item_type, const int* id) {
+	char c[11] = "";
+	sprintf(c, "%d", *id);
+	return item_idx(item_type, c);
 }
 
-bool get_item_index_from_int(const enum ITEM_TYPE* item_type, const int* id, JE_byte* output) {
+int item_idx(const enum ITEM_TYPE* item_type, const char* id) {
+	int index = -1;
+	get_item_index(item_type, id, &index);
+	return (int) index;
+}
+
+bool get_item_index_from_int(const enum ITEM_TYPE* item_type, const int* id, int* output) {
 	char c[11] = "";
 	sprintf(c, "%d", *id);
 	return get_item_index(item_type, c, output);
 }
 
-bool get_item_index(const enum ITEM_TYPE* item_type, const char* id, JE_byte* output) {
-	size_t index = -1;
-	size_t i = -1;
+bool get_item_index(const enum ITEM_TYPE* item_type, const char* id, int* output) {
+	int index = -1;
+	int i = -1;
 	bool end = false;
 	for (;;) {
 		switch (*item_type) {
+		case ItemType_Shot:
+			if (i == -1) i = weapons[0].count-1;
+			if (strcmp(weapons[i].id, id) == 0) index = i;
+			break;
 		case ItemType_Ship:
-			if (i == -1) i = ships[0].count;
+			if (i == -1) i = ships[0].count-1;
 			if (strcmp(ships[i].id, id) == 0) index = i;
 			break;
 		case ItemType_WeaponFront:
 		case ItemType_WeaponRear:
-			if (i == -1) i = weaponPort[0].count;
+			if (i == -1) i = weaponPort[0].count-1;
 			if (strcmp(weaponPort[i].id, id) == 0) index = i;
 			break;
 		case ItemType_Generator:
-			if (i == -1) i = powerSys[0].count;
+			if (i == -1) i = powerSys[0].count-1;
 			if (strcmp(powerSys[i].id, id) == 0) index = i;
 			break;
 		case ItemType_Shield:
-			if (i == -1) i = shields[0].count;
+			if (i == -1) i = shields[0].count-1;
 			if (strcmp(shields[i].id, id) == 0) index = i;
 			break;
 		case ItemType_SidekickLeft:
 		case ItemType_SidekickRight:
-			if (i == -1) i = options[0].count;
+			if (options[0].count == 0) index = 0;
+			if (i == -1) i = options[0].count-1;
 			if (strcmp(options[i].id, id) == 0) index = i;
 			break;
 		case ItemType_Special:
-			if (i == -1) i = special[0].count;
+			if (i == -1) i = special[0].count-1;
 			if (strcmp(special[i].id, id) == 0) index = i;
 			break;
 		default:
@@ -267,7 +280,36 @@ void parse_value_pair(const char* buffer, size_t* index, char* key, char* value)
 }
 
 void read_item_file(FILE* file, enum ITEM_TYPE item_type) {
-	size_t item_i = -1;
+	size_t item_i = 0;
+
+	switch (item_type) {
+	case ItemType_Ship:
+		item_i = ships[0].count++;
+		break;
+	case ItemType_WeaponFront:
+	case ItemType_WeaponRear:
+		item_i = weaponPort[0].count++;
+		break;
+	case ItemType_Generator:
+		item_i = powerSys[0].count++;
+		break;
+	case ItemType_Shield:
+		item_i = shields[0].count++;
+		break;
+	case ItemType_SidekickLeft:
+	case ItemType_SidekickRight:
+		item_i = options[0].count++;
+		break;
+	case ItemType_Special:
+		item_i = special[0].count++;
+		break;
+	case ItemType_Shot:
+		item_i = weapons[0].count++;
+		break;
+	case ItemType_Count:
+		break;
+	}
+
 	size_t buffer_cap = 128;
 	char* buffer = malloc(buffer_cap * sizeof(char));
 	if (buffer == NULL) exit(1); // TODO: Error handling
@@ -333,42 +375,7 @@ void read_item_file(FILE* file, enum ITEM_TYPE item_type) {
 		char* tempptr;
 
 		parse_value_pair(buffer, &i, key, value);
-		if (item_i == -1) {
-			item_i = 0;
-			bool done = false;
-			for (;;) {
-				switch (item_type) {
-					case ItemType_Ship:
-						if (strcmp(ships[item_i].id, "") == 0) done = true;
-						break;
-					case ItemType_WeaponFront:
-					case ItemType_WeaponRear:
-						if (strcmp(weaponPort[item_i].id, "") == 0) done = true;
-						break;
-					case ItemType_Generator:
-						if (strcmp(powerSys[item_i].id, "") == 0) done = true;
-						break;
-					case ItemType_Shield:
-						if (strcmp(shields[item_i].id, "") == 0) done = true;
-						break;
-					case ItemType_SidekickLeft:
-					case ItemType_SidekickRight:
-						if (strcmp(options[item_i].id, "") == 0) done = true;
-						break;
-					case ItemType_Special:
-						if (strcmp(special[item_i].id, "") == 0) done = true;
-						break;
-					case ItemType_Shot:
-						// TODO
-						break;
-					case ItemType_Count:
-						break;
-				}
-				if (done) break;
-				item_i++;
-			}
-		}
-		
+
 		switch (item_type) {
 			case ItemType_Ship:
 				if (strcmp(key, "id") == 0) {
@@ -420,14 +427,18 @@ void read_item_file(FILE* file, enum ITEM_TYPE item_type) {
 					weaponPort[item_i].opnum = atoi(value);
 				}
 				else if (strcmp(key, "op0") == 0) {
-					int j = 0, temp;
-					while (str_pop_int(value, &temp) && j < COUNTOF(weaponPort[item_i].op[0]))
-						weaponPort[item_i].op[0][j++] = temp;
+					char tempC[11];
+					enum ITEM_TYPE shotItemType = ItemType_Shot;
+					int j = 0;
+					while (str_pop_str(value, tempC) && j < COUNTOF(weaponPort[item_i].op[0]))
+						weaponPort[item_i].op[0][j++] = item_idx(&shotItemType, tempC);
 				}
 				else if (strcmp(key, "op1") == 0) {
-					int j = 0, temp;
-					while (str_pop_int(value, &temp) && j < COUNTOF(weaponPort[item_i].op[1]))
-						weaponPort[item_i].op[1][j++] = temp;
+					char tempC[11];
+					enum ITEM_TYPE shotItemType = ItemType_Shot;
+					int j = 0;
+					while (str_pop_str(value, tempC) && j < COUNTOF(weaponPort[item_i].op[1]))
+						weaponPort[item_i].op[1][j++] = item_idx(&shotItemType, tempC);
 				}
 				else if (strcmp(key, "cost") == 0) {
 					weaponPort[item_i].cost = strtol(value, &tempptr, 10);
@@ -544,16 +555,37 @@ void read_item_file(FILE* file, enum ITEM_TYPE item_type) {
 				else if (strcmp(key, "ani") == 0) {
 					options[item_i].ani = atoi(value);
 				}
-				else if (strcmp(key, "gr") == 0) {
+				else if (strcmp(key, "gr0") == 0) {
 					int j = 0, temp;
-					while (str_pop_int(value, &temp) && j < COUNTOF(options[item_i].gr))
-						options[item_i].gr[j++] = temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(options[item_i].gr[0]))
+						options[item_i].gr[0][j++] = temp;
+				}
+				else if (strcmp(key, "gr1") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(options[item_i].gr[1]))
+						options[item_i].gr[1][j++] = temp;
+				}
+				else if (strcmp(key, "gr2") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(options[item_i].gr[2]))
+						options[item_i].gr[2][j++] = temp;
+				}
+				else if (strcmp(key, "gr3") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(options[item_i].gr[3]))
+						options[item_i].gr[3][j++] = temp;
+				}
+				else if (strcmp(key, "gr4") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(options[item_i].gr[4]))
+						options[item_i].gr[4][j++] = temp;
 				}
 				else if (strcmp(key, "wport") == 0) {
-					options[item_i].wport = atoi(value);
+					memcpy(options[item_i].wportId, value, sizeof(options[item_i].wportId) - 1);
 				}
 				else if (strcmp(key, "wpnum") == 0) {
-					options[item_i].wpnum = atoi(value);
+					enum ITEM_TYPE tempItemType = ItemType_Shot;
+					options[item_i].wpnum = item_idx(&tempItemType, value);
 				}
 				else if (strcmp(key, "ammo") == 0) {
 					options[item_i].ammo = atoi(value);
@@ -588,11 +620,100 @@ void read_item_file(FILE* file, enum ITEM_TYPE item_type) {
 					special[item_i].stype = atoi(value);
 				}
 				else if (strcmp(key, "wpn") == 0) {
-					special[item_i].wpn = atoi(value);
+					enum ITEM_TYPE tempItemType = ItemType_Shot;
+					special[item_i].wpn = item_idx(&tempItemType, value);
 				}
 				break;
 			case ItemType_Shot:
-				// TODO
+				if (strcmp(key, "id") == 0) {
+					memcpy(weapons[item_i].id, value, sizeof(weapons[item_i].id) - 1);
+				}
+				else if (strcmp(key, "drain") == 0) {
+					weapons[item_i].drain = atoi(value);
+				}
+				else if (strcmp(key, "shotrepeat") == 0) {
+					weapons[item_i].shotrepeat = atoi(value);
+				}
+				else if (strcmp(key, "multi") == 0) {
+					weapons[item_i].multi = atoi(value);
+				}
+				else if (strcmp(key, "weapani") == 0) {
+					weapons[item_i].weapani = atoi(value);
+				}
+				else if (strcmp(key, "max") == 0) {
+					weapons[item_i].max = atoi(value);
+				}
+				else if (strcmp(key, "tx") == 0) {
+					weapons[item_i].tx = atoi(value);
+				}
+				else if (strcmp(key, "ty") == 0) {
+					weapons[item_i].ty = atoi(value);
+				}
+				else if (strcmp(key, "aim") == 0) {
+					weapons[item_i].aim = atoi(value);
+				}
+				else if (strcmp(key, "attack") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].attack))
+						weapons[item_i].attack[j++] = temp;
+				}
+				else if (strcmp(key, "chain") == 0) {
+					int j = 0;
+					char tempC[11];
+					while (str_pop_str(value, tempC) && j < COUNTOF(weapons[item_i].chainIds))
+					{
+						memcpy(weapons[item_i].chainIds[j], tempC, sizeof(weapons[item_i].chainIds[j]));
+						j++;
+					}
+				}
+				else if (strcmp(key, "del") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].del))
+						weapons[item_i].del[j++] = temp;
+				}
+				else if (strcmp(key, "sx") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].sx))
+						weapons[item_i].sx[j++] = temp;
+				}
+				else if (strcmp(key, "sy") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].sy))
+						weapons[item_i].sy[j++] = temp;
+				}
+				else if (strcmp(key, "bx") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].bx))
+						weapons[item_i].bx[j++] = temp;
+				}
+				else if (strcmp(key, "by") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].by))
+						weapons[item_i].by[j++] = temp;
+				}
+				else if (strcmp(key, "sg") == 0) {
+					int j = 0, temp;
+					while (str_pop_int(value, &temp) && j < COUNTOF(weapons[item_i].sg))
+						weapons[item_i].sg[j++] = temp;
+				}
+				else if (strcmp(key, "acceleration") == 0) {
+					weapons[item_i].acceleration = atoi(value);
+				}
+				else if (strcmp(key, "accelerationx") == 0) {
+					weapons[item_i].accelerationx = atoi(value);
+				}
+				else if (strcmp(key, "circlesize") == 0) {
+					weapons[item_i].circlesize = atoi(value);
+				}
+				else if (strcmp(key, "sound") == 0) {
+					weapons[item_i].sound = atoi(value);
+				}
+				else if (strcmp(key, "trail") == 0) {
+					weapons[item_i].trail = atoi(value);
+				}
+				else if (strcmp(key, "shipblastfilter") == 0) {
+					weapons[item_i].shipblastfilter = atoi(value);
+				}
 				break;
 			case ItemType_Count:
 				break;
@@ -613,6 +734,10 @@ void load_items(void) {
 		int numItems = 0;
 		char itemFileExt[7] = "";
 		switch (item_type) {
+			case ItemType_Shot:
+				tinydir_open_sorted(&dir, TINYDIR_STRING("./data/shots"));
+				strcpy(itemFileExt, "tyrsht");
+				break;
 			case ItemType_Ship:
 				tinydir_open_sorted(&dir, TINYDIR_STRING("./data/items/ship"));
 				strcpy(itemFileExt, "tyrshp");
@@ -655,29 +780,33 @@ void load_items(void) {
 		}
 
 		switch (item_type) {
+		case ItemType_Shot:
+			weapons = calloc(numItems, sizeof(*weapons));
+			//weapons[0].count = numItems;
+			break;
 		case ItemType_Ship:
 			ships = calloc(numItems, sizeof(*ships));
-			ships[0].count = numItems;
+			//ships[0].count = numItems;
 			break;
 		case ItemType_WeaponFront:
 			weaponPort = calloc(numItems, sizeof(*weaponPort));
-			weaponPort[0].count = numItems;
+			//weaponPort[0].count = numItems;
 			break;
 		case ItemType_Generator:
 			powerSys = calloc(numItems, sizeof(*powerSys));
-			powerSys[0].count = numItems;
+			//powerSys[0].count = numItems;
 			break;
 		case ItemType_Shield:
 			shields = calloc(numItems, sizeof(*shields));
-			shields[0].count = numItems;
+			//shields[0].count = numItems;
 			break;
 		case ItemType_SidekickLeft:
-			options = calloc(numItems, sizeof(*options));
-			options[0].count = numItems;
+			options = calloc(max(numItems,1), sizeof(*options));
+			//options[0].count = numItems;
 			break;
 		case ItemType_Special:
 			special = calloc(numItems, sizeof(*special));
-			special[0].count = numItems;
+			//special[0].count = numItems;
 			break;
 		default:
 			continue;
@@ -695,11 +824,59 @@ void load_items(void) {
 
 			FILE* itemFile = fopen(file.path, "r");
 			read_item_file(itemFile, item_type);
+			fclose(itemFile);
 
 			s++;
 		}
 		tinydir_close(&dir);
 	}
+
+	tempItemType = ItemType_Shot;
+	for (int i = 0; i < weapons[0].count; i++) {
+		int chainlen = COUNTOF(weapons[0].chainIds);
+		for (int j = 0; j < chainlen; j++) {
+			if (strcmp(weapons[i].chainIds[j], "0") == 0) continue;
+			get_item_index(&tempItemType, weapons[i].chainIds[j], &weapons[i].chain[j]);
+		}
+	}
+
+	tempItemType = ItemType_WeaponFront;
+	for (int i = 0; i < options[0].count; i++) {
+		if (strcmp(options[i].wportId, "0") != 0) {
+			get_item_index(&tempItemType, options[i].wportId, &options[i].wport);
+		}
+	}
+
+	tempItemType = ItemType_Generator;
+	ITEM_INDEX_STORE[ITEM_GENERATOR_ADVANCEDMR12] = item_idx(&tempItemType, "2");
+	tempItemType = ItemType_Shield;
+	ITEM_INDEX_STORE[ITEM_SHIELD_ADVANCEDINTEGRITYFIELD] = item_idx(&tempItemType, "2");
+	ITEM_INDEX_STORE[ITEM_SHIELD_GENCOREHIGHENERGY] = item_idx(&tempItemType, "4");
+	tempItemType = ItemType_Ship;
+	ITEM_INDEX_STORE[ITEM_SHIP_NORTSHIP] = item_idx(&tempItemType, "12");
+	ITEM_INDEX_STORE[ITEM_SHIP_SILVERSHIP] = item_idx(&tempItemType, "11");
+	ITEM_INDEX_STORE[ITEM_SHIP_STALKER] = item_idx(&tempItemType, "8");
+	ITEM_INDEX_STORE[ITEM_SHIP_STALKER21126] = item_idx(&tempItemType, "13");
+	ITEM_INDEX_STORE[ITEM_SHIP_SUPERCARROT] = item_idx(&tempItemType, "2");
+	ITEM_INDEX_STORE[ITEM_SHIP_USPTALON] = item_idx(&tempItemType, "1");
+	tempItemType = ItemType_Shot;
+	ITEM_INDEX_STORE[ITEM_SHOT_147] = item_idx(&tempItemType, "147");
+	ITEM_INDEX_STORE[ITEM_SHOT_148] = item_idx(&tempItemType, "148");
+	tempItemType = ItemType_SidekickRight;
+	ITEM_INDEX_STORE[ITEM_SIDEKICK_COMPANIONSHIPQUICKSILVER] = item_idx(&tempItemType, "24");
+	tempItemType = ItemType_Special;
+	ITEM_INDEX_STORE[ITEM_SPECIAL_ASTRALZONE] = item_idx(&tempItemType, "13");
+	tempItemType = ItemType_WeaponFront;
+	ITEM_INDEX_STORE[ITEM_WEAPONFRONT_ATOMICRAILGUN] = item_idx(&tempItemType, "39");
+	ITEM_INDEX_STORE[ITEM_WEAPONFRONT_BANANABLAST] = item_idx(&tempItemType, "23");
+	ITEM_INDEX_STORE[ITEM_WEAPONFRONT_HOTDOG] = item_idx(&tempItemType, "25");
+	ITEM_INDEX_STORE[ITEM_WEAPONFRONT_NORTSHIPSUPERPULSE] = item_idx(&tempItemType, "36");
+	ITEM_INDEX_STORE[ITEM_WEAPONFRONT_PULSECANNON] = item_idx(&tempItemType, "1");
+	tempItemType = ItemType_WeaponRear;
+	ITEM_INDEX_STORE[ITEM_WEAPONREAR_BANANABLAST] = item_idx(&tempItemType, "24");
+	ITEM_INDEX_STORE[ITEM_WEAPONREAR_HOTDOG] = item_idx(&tempItemType, "26");
+	ITEM_INDEX_STORE[ITEM_WEAPONREAR_NORTSHIPSPREADER] = item_idx(&tempItemType, "37");
+	ITEM_INDEX_STORE[ITEM_WEAPONREAR_VULCANCANNON] = item_idx(&tempItemType, "15");
 }
 
 void JE_loadItemDat(void)
@@ -724,27 +901,27 @@ void JE_loadItemDat(void)
 
 	for (int i = 0; i < WEAP_NUM + 1; ++i)
 	{
-		fread_u16_die(&weapons[i].drain,           1, f);
-		fread_u8_die( &weapons[i].shotrepeat,      1, f);
-		fread_u8_die( &weapons[i].multi,           1, f);
-		fread_u16_die(&weapons[i].weapani,         1, f);
-		fread_u8_die( &weapons[i].max,             1, f);
-		fread_u8_die( &weapons[i].tx,              1, f);
-		fread_u8_die( &weapons[i].ty,              1, f);
-		fread_u8_die( &weapons[i].aim,             1, f);
-		fread_u8_die(  weapons[i].attack,          8, f);
-		fread_u8_die(  weapons[i].del,             8, f);
-		fread_s8_die(  weapons[i].sx,              8, f);
-		fread_s8_die(  weapons[i].sy,              8, f);
-		fread_s8_die(  weapons[i].bx,              8, f);
-		fread_s8_die(  weapons[i].by,              8, f);
-		fread_u16_die( weapons[i].sg,              8, f);
-		fread_s8_die( &weapons[i].acceleration,    1, f);
-		fread_s8_die( &weapons[i].accelerationx,   1, f);
-		fread_u8_die( &weapons[i].circlesize,      1, f);
-		fread_u8_die( &weapons[i].sound,           1, f);
-		fread_u8_die( &weapons[i].trail,           1, f);
-		fread_u8_die( &weapons[i].shipblastfilter, 1, f);
+		fread_u16_die(&oldWeapons[i].drain,           1, f);
+		fread_u8_die( &oldWeapons[i].shotrepeat,      1, f);
+		fread_u8_die( &oldWeapons[i].multi,           1, f);
+		fread_u16_die(&oldWeapons[i].weapani,         1, f);
+		fread_u8_die( &oldWeapons[i].max,             1, f);
+		fread_u8_die( &oldWeapons[i].tx,              1, f);
+		fread_u8_die( &oldWeapons[i].ty,              1, f);
+		fread_u8_die( &oldWeapons[i].aim,             1, f);
+		fread_u8_die(  oldWeapons[i].attack,          8, f);
+		fread_u8_die(  oldWeapons[i].del,             8, f);
+		fread_s8_die(  oldWeapons[i].sx,              8, f);
+		fread_s8_die(  oldWeapons[i].sy,              8, f);
+		fread_s8_die(  oldWeapons[i].bx,              8, f);
+		fread_s8_die(  oldWeapons[i].by,              8, f);
+		fread_u16_die( oldWeapons[i].sg,              8, f);
+		fread_s8_die( &oldWeapons[i].acceleration,    1, f);
+		fread_s8_die( &oldWeapons[i].accelerationx,   1, f);
+		fread_u8_die( &oldWeapons[i].circlesize,      1, f);
+		fread_u8_die( &oldWeapons[i].sound,           1, f);
+		fread_u8_die( &oldWeapons[i].trail,           1, f);
+		fread_u8_die( &oldWeapons[i].shipblastfilter, 1, f);
 
 		#ifdef DO_DECYRPT
 		char filename[60];
@@ -752,62 +929,75 @@ void JE_loadItemDat(void)
 		if (!dir_file_exists(get_user_directory(), filename)) {
 			FILE* outF = dir_fopen(get_user_directory(), filename, "w");
 			fprintf(outF, "id=%d\n", i);
-			fprintf(outF, "drain=%d\n", weapons[i].drain);
-			fprintf(outF, "shotrepeat=%d\n", weapons[i].shotrepeat);
-			fprintf(outF, "multi=%d\n", weapons[i].multi);
-			fprintf(outF, "weapani=%d\n", weapons[i].weapani);
-			fprintf(outF, "max=%d\n", weapons[i].max);
-			fprintf(outF, "tx=%d\n", weapons[i].tx);
-			fprintf(outF, "ty=%d\n", weapons[i].ty);
-			fprintf(outF, "aim=%d\n", weapons[i].aim);
+			fprintf(outF, "drain=%d\n", oldWeapons[i].drain);
+			fprintf(outF, "shotrepeat=%d\n", oldWeapons[i].shotrepeat);
+			fprintf(outF, "multi=%d\n", oldWeapons[i].multi);
+			fprintf(outF, "weapani=%d\n", oldWeapons[i].weapani);
+			fprintf(outF, "max=%d\n", oldWeapons[i].max);
+			fprintf(outF, "tx=%d\n", oldWeapons[i].tx);
+			fprintf(outF, "ty=%d\n", oldWeapons[i].ty);
+			fprintf(outF, "aim=%d\n", oldWeapons[i].aim);
 			fputs("attack=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].attack); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].attack); ii++) {
+				int val = oldWeapons[i].attack[ii];
+				int chainval = 0;
+				if (val > 99 && val < 250) {
+					chainval = val - 100;
+					val = 1;
+				}
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].attack[ii]);
+				fprintf(outF, "%d", val);
+				oldWeapons[i].chain[ii] = chainval;
+			}
+			fputs("\n", outF);
+			fputs("chain=", outF);
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].chain); ii++) {
+				if (ii > 0) fputs(" ", outF);
+				fprintf(outF, "%d", oldWeapons[i].chain[ii]);
 			}
 			fputs("\n", outF);
 			fputs("del=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].del); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].del); ii++) {
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].del[ii]);
+				fprintf(outF, "%d", oldWeapons[i].del[ii]);
 			}
 			fputs("\n", outF);
 			fputs("sx=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].sx); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].sx); ii++) {
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].sx[ii]);
+				fprintf(outF, "%d", oldWeapons[i].sx[ii]);
 			}
 			fputs("\n", outF);
 			fputs("sy=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].sy); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].sy); ii++) {
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].sy[ii]);
+				fprintf(outF, "%d", oldWeapons[i].sy[ii]);
 			}
 			fputs("\n", outF);
 			fputs("bx=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].bx); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].bx); ii++) {
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].bx[ii]);
+				fprintf(outF, "%d", oldWeapons[i].bx[ii]);
 			}
 			fputs("\n", outF);
 			fputs("by=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].by); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].by); ii++) {
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].by[ii]);
+				fprintf(outF, "%d", oldWeapons[i].by[ii]);
 			}
 			fputs("\n", outF);
 			fputs("sg=", outF);
-			for (int ii = 0; ii < COUNTOF(weapons[i].sg); ii++) {
+			for (int ii = 0; ii < COUNTOF(oldWeapons[i].sg); ii++) {
 				if (ii > 0) fputs(" ", outF);
-				fprintf(outF, "%d", weapons[i].sg[ii]);
+				fprintf(outF, "%d", oldWeapons[i].sg[ii]);
 			}
 			fputs("\n", outF);
-			fprintf(outF, "acceleration=%d\n", weapons[i].acceleration);
-			fprintf(outF, "accelerationx=%d\n", weapons[i].accelerationx);
-			fprintf(outF, "circlesize=%d\n", weapons[i].circlesize);
-			fprintf(outF, "sound=%d\n", weapons[i].sound);
-			fprintf(outF, "trail=%d\n", weapons[i].trail);
-			fprintf(outF, "shipblastfilter=%d\n", weapons[i].shipblastfilter);
+			fprintf(outF, "acceleration=%d\n", oldWeapons[i].acceleration);
+			fprintf(outF, "accelerationx=%d\n", oldWeapons[i].accelerationx);
+			fprintf(outF, "circlesize=%d\n", oldWeapons[i].circlesize);
+			fprintf(outF, "sound=%d\n", oldWeapons[i].sound);
+			fprintf(outF, "trail=%d\n", oldWeapons[i].trail);
+			fprintf(outF, "shipblastfilter=%d\n", oldWeapons[i].shipblastfilter);
 			fclose(outF);
 		}
 		#endif
@@ -827,6 +1017,76 @@ void JE_loadItemDat(void)
 		fread_u16_die(&oldWeaponPort[i].poweruse,    1, f);
 
 		#ifdef DO_DECYRPT
+		// Sprite number of bigship graphic used in game menu.
+		// Originally was hardcoded into the game menu ship graphic drawing function
+		int bigshipgraphic[43] = {
+			-1,
+			0, 1, 2, 3, 4, // 5
+			5, 6, 7, 8, 9, // 10
+			10, 11, 21, 5, 13, // 15
+			-1, 14, 15, 0, 14, // 20
+			9, 8, 2, 15, 0, // 25
+			13, 0, 8, 8, 11, // 30
+			1, 0, 0, 0, 0, // 35
+			0, 0, 0, 0, 0, // 40
+			2, 1 // 42
+		};
+		// X and Y offsets of bigship graphic used in game menu.
+		// Originally was hardcoded into the game menu ship graphic drawing function
+		int bigshipgraphfrontxy[43][2] = {
+			{ 0, 0 }, // 0
+			{ 61, 48 }, { 52, 41 }, { 54, 36 }, { 61, 53 }, { 66, 41 }, // 5
+			{ 51, 35 }, { 53, 39 }, { 66, 53 }, { 0, 0 }, { 0, 0 }, // 10
+			{ 0, 0 }, { 0, 0 }, { 51, 35 }, { 61, 53 }, { 0, 0 }, // 15
+			{ 0, 0 }, { 59, 38 }, { 0, 0 }, { 61, 48 }, { 59, 38 }, // 20
+			{ 0, 0 }, { 0, 0 }, { 54, 36 }, { 0, 0 }, { 61, 48 }, // 25
+			{ 0, 0 }, { 61, 48 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, // 30
+			{ 52, 41 }, { 59, 38 }, { 59, 38 }, { 59, 38 }, { 59, 38 }, // 35
+			{ 59, 38 }, { 59, 38 }, { 59, 38 }, { 59, 38 }, { 59, 38 }, // 40
+			{ 54, 36 }, { 52, 41 } // 42
+		};
+		// X and Y offsets of bigship graphic used in game menu.
+		// Originally was hardcoded into the game menu ship graphic drawing function
+		int bigshipgraphrearxy[43][2] = {
+			{ 0, 0 }, // 0
+			{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, // 5
+			{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 41, 92 }, { 27, 92 }, // 10
+			{ 49, 113 }, { 43, 102 }, { 0, 0 }, { 51, 97 }, { 39, 96 }, // 15
+			{ 0, 0 }, { 0, 0 }, { 41, 76 }, { 0, 0 }, { 0, 0 }, // 20
+			{ 27, 92 }, { 41, 92 }, { 0, 0 }, { 41, 76 }, { 0, 0 }, // 25
+			{ 39, 96 }, { 0, 0 }, { 41, 92 }, { 41, 92 }, { 43, 102 }, // 30
+			{ 41, 92 }, { 41, 92 }, { 41, 92 }, { 41, 92 }, { 41, 92 }, // 35
+			{ 41, 92 }, { 41, 92 }, { 41, 92 }, { 41, 92 }, { 41, 92 }, // 40
+			{ 0, 0 }, { 0, 0 }  // 42
+		};
+		// Calculated by number of times item appeared in shop in episodes 1-4, divided by number of levels
+		int probabilities[43] = {
+			0,
+			30, 56, 28, 4, 7, // 5
+			1, 23, 14, 2, 54, // 10
+			58, 37, 26, 11, 33, // 15
+			0, 30, 19, 47, 33, // 20
+			7, 16, 1, 1, 1, // 25
+			1, 9, 5, 12, 14, // 30
+			1, 1, 1, 1, 1, // 35
+			1, 1, 1, 1, 7, // 40
+			2, 2 // 42
+		};
+		// Position of weapon: Front (0) or rear (1)
+		// Determined by where item appeared in shop in episodes 1-4 or where it was assigned to ship in game code for special game types / powerups.
+		int positions[43] = {
+			0,
+			0, 0, 0, 0, 0, // 5
+			0, 0, 0, 0, 1, // 10
+			1, 1, 0, 1, 1, // 15
+			0, 0, 1, 0, 0, // 20
+			1, 1, 0, 1, 0, // 25
+			1, 0, 1, 1, 1, // 30
+			0, 0, 0, 0, 0, // 35
+			0, 1, 0, 0, 0, // 40
+			0, 0 // 42
+		};
+
 		char filename[60];
 		snprintf(filename, sizeof(filename), "data\\items\\weapon\\%d.tyrwep", i);
 		if (!dir_file_exists(get_user_directory(), filename)) {
@@ -849,6 +1109,13 @@ void JE_loadItemDat(void)
 			fprintf(outF, "cost=%d\n", oldWeaponPort[i].cost);
 			fprintf(outF, "itemgraphic=%d\n", oldWeaponPort[i].itemgraphic);
 			fprintf(outF, "poweruse=%d\n", oldWeaponPort[i].poweruse);
+			fprintf(outF, "position=%d\n", positions[i]);
+			fprintf(outF, "bigshipgraphic=%d\n", bigshipgraphic[i]);
+			fprintf(outF, "bigshipgraphfrntx=%d\n", bigshipgraphfrontxy[i][0]);
+			fprintf(outF, "bigshipgraphfrnty=%d\n", bigshipgraphfrontxy[i][1]);
+			fprintf(outF, "bigshipgraphrearx=%d\n", bigshipgraphrearxy[i][0]);
+			fprintf(outF, "bigshipgraphreary=%d\n", bigshipgraphrearxy[i][1]);
+			fprintf(outF, "probability=%d\n", probabilities[i]);
 			fclose(outF);
 		}
 		#endif
@@ -893,6 +1160,26 @@ void JE_loadItemDat(void)
 		fread_u16_die(&oldPowerSys[i].cost,        1, f);
 
 		#ifdef DO_DECYRPT
+		// Sprite number of bigship graphic used in game menu.
+		// Originally was hardcoded into the game menu ship graphic drawing function
+		int bigshipgraphic[7] = {
+			0,
+			16, 16, 17, 18, 19, // 5
+			20 // 6
+		};
+		// X and Y offsets of bigship graphic used in game menu.
+		// Originally was hardcoded into the game menu ship graphic drawing function
+		int bigshipgraphxy[7][2] = {
+			{ 0, 0 }, // 0
+			{ 62, 84 }, { 62, 84 }, { 64, 85 }, { 67, 86 }, { 66, 84 }, // 5
+			{ 63, 97 } // 6
+		};
+		// Calculated by number of times item appeared in shop in episodes 1-4, divided by number of levels
+		int probabilities[7] = {
+			0,
+			61, 84, 86, 49, 25, // 5
+			5, // 7
+		};
 		char filename[60];
 		snprintf(filename, sizeof(filename), "data\\items\\generator\\%d.tyrgen", i);
 		if (!dir_file_exists(get_user_directory(), filename)) {
@@ -903,6 +1190,10 @@ void JE_loadItemDat(void)
 			fprintf(outF, "power=%d\n", oldPowerSys[i].power);
 			fprintf(outF, "speed=%d\n", oldPowerSys[i].speed);
 			fprintf(outF, "cost=%d\n", oldPowerSys[i].cost);
+			fprintf(outF, "bigshipgraphic=%d\n", bigshipgraphic[i]);
+			fprintf(outF, "bigshipgraphx=%d\n", bigshipgraphxy[i][0]);
+			fprintf(outF, "bigshipgraphy=%d\n", bigshipgraphxy[i][1]);
+			fprintf(outF, "probability=%d\n", probabilities[i]);
 			fclose(outF);
 		}
 		#endif
@@ -923,6 +1214,22 @@ void JE_loadItemDat(void)
 		fread_u8_die( &oldShips[i].bigshipgraphic, 1, f);
 
 		#ifdef DO_DECYRPT
+		// X and Y offsets of bigship graphic used in game menu.
+		// Originally was hardcoded into the game menu ship graphic drawing function
+		int bigshipgraphxy[14][2] = {
+			{ 0, 0 },
+			{ 35, 33 },{ 35, 33 },{ 31, 36 },{ 31, 36 },{ 31, 35 },
+			{ 31, 35 },{ 31, 35 },{ 31, 35 },{ 35, 33 },{ 31, 36 },
+			{ 35, 33 },{ 31, 35 },{ 31, 35 },
+		};
+		// Calculated by number of times item appeared in shop in episodes 1-4, divided by number of levels
+		int probabilities[14] = {
+			0,
+			67, 5, 46, 47, 32,
+			16, 7, 1, 40, 1,
+			1, 1, 2
+		};
+
 		char filename[60];
 		snprintf(filename, sizeof(filename), "data\\items\\ship\\%d.tyrshp", i);
 		if (!dir_file_exists(get_user_directory(), filename)) {
@@ -936,6 +1243,9 @@ void JE_loadItemDat(void)
 			fprintf(outF, "dmg=%d\n", oldShips[i].dmg);
 			fprintf(outF, "cost=%d\n", oldShips[i].cost);
 			fprintf(outF, "bigshipgraphic=%d\n", oldShips[i].bigshipgraphic);
+			fprintf(outF, "bigshipgraphx=%d\n", bigshipgraphxy[i][0]);
+			fprintf(outF, "bigshipgraphy=%d\n", bigshipgraphxy[i][1]);
+			fprintf(outF, "probability=%d\n", probabilities[i]);
 			fclose(outF);
 		}
 		#endif
@@ -962,6 +1272,26 @@ void JE_loadItemDat(void)
 		fread_u8_die(  &oldOptions[i].icongr,      1, f);
 
 		#ifdef DO_DECYRPT
+		// 0 Both sides, 1 left only, 2 right only.
+		int positions[31] = {
+			0,
+			0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0,
+			0, 0, 0, 0, 2,
+			0, 2, 0, 2, 2,
+			2, 2, 2, 0, 0
+		};
+		// Calculated by number of times item appeared in shop in episodes 1-4, divided by number of levels
+		int probabilities[31] = {
+			0,
+			23, 40, 18, 9, 2,
+			21, 21, 30, 19, 21,
+			4, 4, 11, 12, 4,
+			17, 9, 5, 13, 7,
+			10, 2, 9, 1, 4,
+			2, 4, 2, 6, 2
+		};
 		char filename[60];
 		snprintf(filename, sizeof(filename), "data\\items\\sidekick\\%d.tyrsid", i);
 		if (!dir_file_exists(get_user_directory(), filename)) {
@@ -975,10 +1305,54 @@ void JE_loadItemDat(void)
 			fprintf(outF, "option=%d\n", oldOptions[i].option);
 			fprintf(outF, "opspd=%d\n", oldOptions[i].opspd);
 			fprintf(outF, "ani=%d\n", oldOptions[i].ani);
-			fputs("gr=", outF);
+			fputs("gr0=", outF);
 			for (int ii = 0; ii < COUNTOF(oldOptions[i].gr); ii++) {
 				if (ii > 0) fputs(" ", outF);
 				fprintf(outF, "%d", oldOptions[i].gr[ii]);
+			}
+			fputs("\n", outF);
+			fputs("gr1=", outF);
+			for (int ii = 0; ii < COUNTOF(oldOptions[i].gr); ii++) {
+				if (ii > 0) fputs(" ", outF);
+				if (oldOptions[i].pwr > 0 && oldOptions[i].ani > ii) {
+					fprintf(outF, "%d", oldOptions[i].gr[ii] + 1);
+				}
+				else {
+					fprintf(outF, "%d", 0);
+				}
+			}
+			fputs("\n", outF);
+			fputs("gr2=", outF);
+			for (int ii = 0; ii < COUNTOF(oldOptions[i].gr); ii++) {
+				if (ii > 0) fputs(" ", outF);
+				if (oldOptions[i].pwr > 1 && oldOptions[i].ani > ii) {
+					fprintf(outF, "%d", oldOptions[i].gr[ii] + 2);
+				}
+				else {
+					fprintf(outF, "%d", 0);
+				}
+			}
+			fputs("\n", outF);
+			fputs("gr3=", outF);
+			for (int ii = 0; ii < COUNTOF(oldOptions[i].gr); ii++) {
+				if (ii > 0) fputs(" ", outF);
+				if (oldOptions[i].pwr > 2 && oldOptions[i].ani > ii) {
+					fprintf(outF, "%d", oldOptions[i].gr[ii] + 3);
+				}
+				else {
+					fprintf(outF, "%d", 0);
+				}
+			}
+			fputs("\n", outF);
+			fputs("gr4=", outF);
+			for (int ii = 0; ii < COUNTOF(oldOptions[i].gr); ii++) {
+				if (ii > 0) fputs(" ", outF);
+				if (oldOptions[i].pwr > 3 && oldOptions[i].ani > ii) {
+					fprintf(outF, "%d", oldOptions[i].gr[ii] + 4);
+				}
+				else {
+					fprintf(outF, "%d", 0);
+				}
 			}
 			fputs("\n", outF);
 			fprintf(outF, "wport=%d\n", oldOptions[i].wport);
@@ -986,6 +1360,8 @@ void JE_loadItemDat(void)
 			fprintf(outF, "ammo=%d\n", oldOptions[i].ammo);
 			fprintf(outF, "stop=%d\n", oldOptions[i].stop);
 			fprintf(outF, "icongr=%d\n", oldOptions[i].icongr);
+			fprintf(outF, "position=%d\n", positions[i]);
+			fprintf(outF, "probability=%d\n", probabilities[i]);
 			fclose(outF);
 		}
 		#endif
@@ -1003,6 +1379,12 @@ void JE_loadItemDat(void)
 		fread_u16_die(&oldShields[i].cost,        1, f);
 
 		#ifdef DO_DECYRPT
+		// Calculated by number of times item appeared in shop in episodes 1-4, divided by number of levels
+		int probabilities[31] = {
+			0,
+			16, 40, 44, 68, 61,
+			35, 14, 26, 5, 1,
+		};
 		char filename[60];
 		snprintf(filename, sizeof(filename), "data\\items\\shield\\%d.tyrshd", i);
 		if (!dir_file_exists(get_user_directory(), filename)) {
@@ -1013,6 +1395,7 @@ void JE_loadItemDat(void)
 			fprintf(outF, "mpwr=%d\n", oldShields[i].mpwr);
 			fprintf(outF, "itemgraphic=%d\n", oldShields[i].itemgraphic);
 			fprintf(outF, "cost=%d\n", oldShields[i].cost);
+			fprintf(outF, "probability=%d\n", probabilities[i]);
 			fclose(outF);
 		}
 		#endif

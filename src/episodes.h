@@ -32,6 +32,7 @@
 
 typedef struct
 {
+	char        id[11];
 	JE_word     drain;
 	JE_byte     shotrepeat;
 	JE_byte     multi;
@@ -39,6 +40,8 @@ typedef struct
 	JE_byte     max;
 	JE_byte     tx, ty, aim;
 	JE_byte     attack[8], del[8]; /* [1..8] */
+	char        chainIds[8][11];
+	int         chain[8];
 	JE_shortint sx[8], sy[8]; /* [1..8] */
 	JE_shortint bx[8], by[8]; /* [1..8] */
 	JE_word     sg[8]; /* [1..8] */
@@ -47,7 +50,27 @@ typedef struct
 	JE_byte     sound;
 	JE_byte     trail;
 	JE_byte     shipblastfilter;
+	size_t      count;
 } JE_WeaponType;
+
+typedef struct
+{
+	JE_word     drain;
+	JE_byte     shotrepeat;
+	JE_byte     multi;
+	JE_word     weapani;
+	JE_byte     max;
+	JE_byte     tx, ty, aim;
+	JE_byte     attack[8], del[8], chain[8]; /* [1..8] */
+	JE_shortint sx[8], sy[8]; /* [1..8] */
+	JE_shortint bx[8], by[8]; /* [1..8] */
+	JE_word     sg[8]; /* [1..8] */
+	JE_shortint acceleration, accelerationx;
+	JE_byte     circlesize;
+	JE_byte     sound;
+	JE_byte     trail;
+	JE_byte     shipblastfilter;
+} JE_WeaponTypeOld;
 
 typedef struct
 {
@@ -104,8 +127,9 @@ typedef struct
 	JE_byte     tr, option;
 	JE_shortint opspd;
 	JE_byte     ani;
-	JE_word     gr[20]; /* [1..20] */
-	JE_byte     wport;
+	JE_word     gr[5][20];
+	int         wport;
+	char        wportId[11];
 	JE_word     wpnum;
 	JE_byte     ammo;
 	JE_boolean  stop;
@@ -250,7 +274,8 @@ JE_ShieldTypeOld oldShields[SHIELD_NUM + 1];
 JE_SpecialTypeOld oldSpecial[SPECIAL_NUM + 1];
 
 extern JE_WeaponPortType *weaponPort;
-extern JE_WeaponType weapons[WEAP_NUM + 1]; /* [0..weapnum] */
+extern JE_WeaponType* weapons;
+extern JE_WeaponTypeOld oldWeapons[WEAP_NUM + 1]; /* [0..weapnum] */
 extern JE_PowerType* powerSys;
 extern JE_ShipType* ships;
 extern JE_OptionType* options;
@@ -267,24 +292,25 @@ extern JE_boolean bonusLevel;
 extern JE_boolean jumpBackToEpisode1;
 
 enum ITEM_TYPE {
-	ItemType_Ship = 0,
-	ItemType_WeaponFront = 1,
-	ItemType_WeaponRear = 2,
-	ItemType_Generator = 3,
-	ItemType_Shield = 4,
-	ItemType_SidekickLeft = 5,
-	ItemType_SidekickRight = 6,
-	ItemType_Special = 7,
-	ItemType_Shot = 8,
+	ItemType_Shot = 0,
+	ItemType_Ship = 1,
+	ItemType_WeaponFront = 2,
+	ItemType_WeaponRear = 3,
+	ItemType_Generator = 4,
+	ItemType_Shield = 5,
+	ItemType_SidekickLeft = 6,
+	ItemType_SidekickRight = 7,
+	ItemType_Special = 8,
 	ItemType_Count = 9,
 };
 
 extern bool value_in_array_je_byte(int val, JE_byte* arr, size_t n);
 extern bool add_random_shop_item(const enum ITEM_TYPE* item_type, JE_byte* itemAvail, int index, const size_t itemAvailSize);
-size_t item_idx(const enum ITEM_TYPE* item_type, const char* id);
-size_t item_idx_from_jebyte(const enum ITEM_TYPE* item_type, const JE_byte* id);
-extern bool get_item_index(const enum ITEM_TYPE* item_type, const char* id, JE_byte* output);
-extern bool get_item_index_from_int(const enum ITEM_TYPE* item_type, const int* id, JE_byte* output);
+extern int item_idx(const enum ITEM_TYPE* item_type, const char* id);
+extern int item_idx_from_jebyte(const enum ITEM_TYPE* item_type, const JE_byte* id);
+extern int item_idx_from_int(const enum ITEM_TYPE* item_type, const int* id);
+extern bool get_item_index(const enum ITEM_TYPE* item_type, const char* id, int* output);
+extern bool get_item_index_from_int(const enum ITEM_TYPE* item_type, const int* id, int* output);
 extern void parse_value_pair(const char* buffer, size_t* index, char* key, char* value);
 void read_item_file(FILE* file, enum ITEM_TYPE item_type);
 void load_items(void);

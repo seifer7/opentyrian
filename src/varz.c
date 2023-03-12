@@ -38,6 +38,7 @@
 
 JE_integer tempDat, tempDat2, tempDat3;
 
+int ITEM_INDEX_STORE[ITEM_STORE_MAX];
 const JE_byte SANextShip[SA + 2] /* [0..SA + 1] */ = { 3, 9, 6, 2, 5, 1, 4, 3, 7 }; // 0 -> 3 -> 2 -> 6 -> 4 -> 5 -> 1 -> 9 -> 7
 const JE_word SASpecialWeapon[SA] /* [1..SA] */  = { 7, 8, 9, 10, 11, 12, 13 };
 const JE_word SASpecialWeaponB[SA] /* [1..SA] */ = {37, 6, 15, 40, 16, 14, 41 };
@@ -304,7 +305,8 @@ unsigned int last_superpixel;
 /*Temporary Numbers*/
 JE_byte temp, temp2, temp3;
 JE_word tempX, tempY, tempW;
-int tempI;
+int tempI, tempI2;
+bool tempHasPower;
 enum ITEM_TYPE tempItemType;
 
 JE_boolean doNotSaveBackup;
